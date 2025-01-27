@@ -1,16 +1,16 @@
 # IndraSetu
 
-GPIO2 -> CLKOUT
-GPIO3 -> RXF#
-GPIO4 -> TXE#
+### GPIO2 -> CLKOUT
+### GPIO3 -> RXF#
+### GPIO4 -> TXE#
 
-GPIO5 -> OE#
-GPIO6 -> RD#
-GPIO7 -> WR#
+### GPIO5 -> OE#
+### GPIO6 -> RD#
+### GPIO7 -> WR#
 
-GPIO8 -> BIT0
+### GPIO8 -> BIT0
 
-VBUS  -> 3.3v
+### VBUS  -> 3.3v
 
 Sending data which is emiting from pc through ft232h into pi pico with the help of PIO state machine
 
