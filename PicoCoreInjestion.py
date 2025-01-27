@@ -1,66 +1,76 @@
-import rp2
-import machine
+# Example using PIO to wait for a pin change and raise an IRQ.
+#
+# Demonstrates:
+# - PIO wrapping
+# - PIO wait instruction, waiting on an input pin
+# - PIO irq instruction, in blocking mode with relative IRQ number
+# - setting the in_base pin for a StateMachine
+# - setting an irq handler for a StateMachine
+# - instantiating 2x StateMachine's with the same program and different pins
+
 import time
+from machine import Pin
+import rp2
 
-pin2 = machine.Pin(2, machine.Pin.IN)  # CLKOUT
+pin2=Pin(2,Pin.IN)   #clkout -> AC5
+pin3=Pin(3,Pin.IN)   #RXF#   -> AC0
+pin4=Pin(4,Pin.IN)   #TXE#   -> ?
 
-pin3 = machine.Pin(3, machine.Pin.IN)  # RF#
-pin4 = machine.Pin(4, machine.Pin.IN)  # TXE
-
-pin5 = machine.Pin(5, machine.Pin.OUT) # OE# to be side set
-pin6 = machine.Pin(6, machine.Pin.OUT) # RD# to be side set
-pin7 = machine.Pin(7, machine.Pin.OUT) # WR# to be side set
+pin5=Pin(5,Pin.OUT,Pin.PULL_UP) # OE# -> AC6
+pin6=Pin(6,Pin.OUT,Pin.PULL_UP) # RD# -> AC2
+pin7=Pin(7,Pin.OUT,Pin.PULL_UP) # WR# -> AC3
 
 pin5.value(1)
 pin6.value(1)
 pin7.value(1)
 
-pin8 = machine.Pin(8, machine.Pin.IN)  # Bit 0
-pin9 = machine.Pin(9, machine.Pin.IN)  # Bit 1
+pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 
-# Define the PIO program
-@rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH), autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
-def pio_program():
-    #wrap_target()
-    #nop().side(7)
-    #wait(0,pin,3).side(7)
-    wait(0,gpio,3).side(7)
-    irq(block, rel(0)).side(7)
-    wait(0,gpio,2).side(7)
-    wait(1,gpio,2).side(6)
-    #wait(0,pin,1).side(3)
-    #irq(block, rel(0)).side(3)
-    #wrap()
-    wrap_target()
-    in_(pins, 1).side(4)  # Read 1 bit from the input pin (GPIO 8)
-    wrap()
+@rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
+def wait_pin_low():
+	#wrap_target()
+	wait(0, gpio, 3).side(0b111)
+	irq(block, rel(0)).side(0b011)
+	wait(0, gpio, 2).side(0b011)
+	wait(1, gpio, 2).side(0b011)
+	in_(pins,1).side(0b011)
+	wrap_target()
+	in_(pins,1).side(0b001)
+	wrap()
+	#irq(block, rel(0))
+	#wrap()
+
 
 def handler(sm):
-    # Print a (wrapping) timestamp, and the state machine object.
-    print(time.ticks_ms(), sm)
-
-# Create a StateMachine with the PIO program, running at 60 MHz
-sm = rp2.StateMachine(0, pio_program, freq=60_000_000, sideset_base=pin5, in_base=pin8)
-sm.irq(handler)
-# Start the StateMachine
-#sm.active(1)
+	# Print a (wrapping) timestamp, and the state machine object.
+	print(time.ticks_ms(), sm)
+	pin5.value(0)
+	pin6.value(1)
+	pin7.value(1)
 
 
-# Start the StateMachine
 
-def clear():
-    print("\x1B\x5B2J", end="")
-    print("\x1B\x5BH", end="")
+# Instantiate StateMachine(1) with wait_pin_low program on Pin(17).
+sm1 = rp2.StateMachine(0, wait_pin_low,freq=60_000_000, sideset_base=pin5, in_base=pin8)
+sm1.irq(handler)
+
+# Start the StateMachine's running.
+#sm0.active(1)
+#sm1.active(1)
+
+# Now, when Pin(16) or Pin(17) is pulled low a message will be printed to the REPL.
 
 while True:
-    sm.active(1)
-    print("-----------------------")
+    #if pin16.value()==1:
+    #    print("1")
+    #else:
+    #    print("0")
+    sm1.active(1)
     qsz=0
-    while sm.rx_fifo() and qsz < 8:
-        print(bin(sm.get()))
+    while sm1.rx_fifo():# and qsz<8:
+        print(bin(sm1.get()))
         qsz=qsz+1
-    time.sleep(0.5)
-    sm.restart()
-    #clear()
-    # Wait for a short period before checking again
-    #time.sleep(1)
+    print("------------------"+str(qsz))
+    time.sleep(0.2)
+    sm1.active(0)
+    sm1.restart()
