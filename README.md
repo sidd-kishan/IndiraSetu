@@ -1,5 +1,5 @@
 # IndraSetu
-
+### pi pico -> ft232h
 ### GPIO2 -> CLKOUT
 ### GPIO3 -> RXF#
 ### GPIO4 -> TXE#
