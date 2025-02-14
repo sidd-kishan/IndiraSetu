@@ -33,7 +33,7 @@ def wait_pin_low():
 	irq(block, rel(0)).side(0b011)
 	wait(0, gpio, 2).side(0b011)
 	wait(1, gpio, 2).side(0b011)
-	in_(pins,1).side(0b011)
+	#in_(pins,1).side(0b011)
 	wrap_target()
 	in_(pins,1).side(0b001)
 	wrap()
@@ -58,6 +58,8 @@ sm1.irq(handler)
 #sm0.active(1)
 #sm1.active(1)
 
+
+
 # Now, when Pin(16) or Pin(17) is pulled low a message will be printed to the REPL.
 
 while True:
@@ -68,7 +70,13 @@ while True:
     sm1.active(1)
     qsz=0
     while sm1.rx_fifo():# and qsz<8:
-        print(bin(sm1.get()))
+        #print(int(sm1.get()))
+        sm_got = bin(sm1.get())[2:]
+        sm_length = 32-len(sm_got)
+        if sm_length :
+            print("0"*sm_length+sm_got)
+        else:
+            print(sm_got)
         qsz=qsz+1
     print("------------------"+str(qsz))
     time.sleep(0.2)
