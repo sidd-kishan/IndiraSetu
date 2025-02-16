@@ -17,6 +17,14 @@
 // stream object.
 std::ostream& operator<<(std::ostream& os, const FT_DEVICE_LIST_INFO_NODE& device);
 
+std::string byteToHex(unsigned char byte) {
+	const char hexDigits[] = "0123456789abcdef";
+	std::string hexStr;
+	hexStr += hexDigits[(byte >> 4) & 0x0F];
+	hexStr += hexDigits[byte & 0x0F];
+	return hexStr;
+}
+
 // Prints a formatted error message and terminates the program with
 // status code EXIT_FAILURE.
 void error(const char* message);
@@ -40,7 +48,9 @@ int main()
 	DWORD EventDWord;
 	DWORD RxBytes;
 	DWORD TxBytes;
-	DWORD BytesReceived;
+	DWORD BytesReceived=0, BytesWritten=0;
+	char TxBuffer[OneSector];
+
 
 	// --- Get number of devices ---
 
@@ -194,7 +204,7 @@ int main()
 		status = FT_SetLatencyTimer(myDevice.ftHandle, LatencyTimer);     
 		status = FT_SetUSBParameters(myDevice.ftHandle, 0x10000, 0x10000);
 		status = FT_SetFlowControl(myDevice.ftHandle, FT_FLOW_RTS_CTS, 0, 0);
-		status = FT_Purge(myDevice.ftHandle, FT_PURGE_RX);
+		status = FT_Purge(myDevice.ftHandle, FT_PURGE_TX);
 		//access data from here  
 	}
 	else if (status != FT_OK) {
@@ -216,19 +226,34 @@ int main()
 	// 0x80: Command to set AD[7:0].
 	// 0x00: Output values for AD[7:0] (placeholder)
 	// 0xFF: GPIO directions for AD[7:0] (1 = output)
-
-	uint8_t value = 0x00;
+	/*
+	uint8_t value = 0xAA;
 	for (int j = 0; j < 2000; j++) {
-		//value = (j % 2 == 0) ? 0xAA:0x55 ;
 		for (int i = 0; i < 1024; i++) {
 			*(recvBuffer + i + (j * 1024)) = value;
 			value++;
 			value &= 0xFF;
 		}
 	}
-	char TxBuffer[OneSector];
+	*/
+	/*
+	for (int i=0;i < 1023;i++) {
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i] = 0x00;
+	}*/
+	
+	//TxBuffer[0] = 0x00;
+	//TxBuffer[1] = 0xFF;
 	int i = 0;
-	for (; i <= 936;) {
+	for (;i <= 928;) {
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
@@ -318,44 +343,61 @@ int main()
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
 	}
-	//for (i = 0; i < 1024; i++)TxBuffer[i] = 0x00;
+	std::cout << "buf size:" << i;
 	// Infinite loop
-	while (true)
-	{
-		
-		//std::cout << "\rWriting: " << std::noshowbase << std::hex << std::setfill('0') << std::setw(2) << int(value);
-		status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
-		
-		if (status == FT_OK && (TxBytes == 0)) {
-			status = FT_Write(myDevice.ftHandle, TxBuffer, 255, &BytesReceived);
-			//status = FT_Write(myDevice.ftHandle, TxBuffer, 1024, &BytesReceived);
-			if (status == FT_OK && BytesReceived)
-			{
-				std::cout << "\n Bytes Read " << BytesReceived;
-				//status = FT_Purge(myDevice.ftHandle, FT_PURGE_RX);
-				//status = FT_Purge(myDevice.ftHandle, FT_PURGE_TX);
-				std::this_thread::sleep_for(std::chrono::seconds(1));
+	if (0) { // read from pico
+		while (true)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			//std::cout << "\rWriting: " << std::noshowbase << std::hex << std::setfill('0') << std::setw(2) << int(value);
+			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
+
+			if (status == FT_OK && (TxBytes == 0)) {
+				status = FT_Read(myDevice.ftHandle, recvBuffer, 2000 * 1024, &BytesReceived);
+				if (status == FT_OK)
+				{
+					std::cout << "\n Bytes Read 0x" << byteToHex(recvBuffer[0]);
+					status = FT_Purge(myDevice.ftHandle, FT_PURGE_RX);
+					status = FT_Purge(myDevice.ftHandle, FT_PURGE_TX);
+				}
+				else
+				{
+					// FT_Write Failed  
+				}
 			}
-			else
-			{
-				// FT_Write Failed  
+			else {
+				ft_error(status, "FT_Write", myDevice.ftHandle);
 			}
-		} else {
-			ft_error(status, "FT_Write", myDevice.ftHandle);
 		}
-
-		//if (bytesWritten != sizeof(gpio_command)) {
-		//	error("Error while writing to device.");
-		//}
-
-		// Sleep thread
-		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
-		//std::this_thread::sleep_for(std::chrono::seconds(1));
-		
+	}
+	else { // write to pico
+		//set interface into FT245 Synchronous FIFO mode 
+		while (1)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
+			if ((status == FT_OK) && (TxBytes == 0))
+			{
+				status = FT_Write(myDevice.ftHandle, TxBuffer, 255, &BytesWritten);
+				if (status == FT_OK)
+				{
+					// FT_Write OK  
+					std::cout << "\n Bytes Write " << BytesWritten << " Byte 0x" << byteToHex(TxBuffer[0]) << " 0x" << byteToHex(TxBuffer[1]) << " 0x" << byteToHex(TxBuffer[2]) << " 0x" << byteToHex(TxBuffer[3]) << " last byte 0x" << byteToHex(TxBuffer[255]);
+					status = FT_Purge(myDevice.ftHandle, FT_PURGE_RX);
+					status = FT_Purge(myDevice.ftHandle, FT_PURGE_TX);
+				}
+				else
+				{
+					std::cout << "write failed";
+					// FT_Write Failed  
+				}
+			}
+		}
 	}
 
 	return 0;
 }
+
 
 /*** HELPER FUNCTION DEFINITIONS ***/
 
