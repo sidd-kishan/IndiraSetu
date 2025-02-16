@@ -29,13 +29,13 @@ pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 @rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def wait_pin_low():
 	#wrap_target()
-	wait(0, gpio, 3).side(0)
-	irq(block, rel(0)).side(0)
-	wait(0, gpio, 2).side(0)
-	wait(1, gpio, 2).side(0)
+	wait(0, gpio, 3).side(00)
+	irq(block, rel(0)).side(00)
+	wait(0, gpio, 2).side(00)
+	wait(1, gpio, 2).side(00)
 	#in_(pins,1).side(0b011)
 	wrap_target()
-	in_(pins,1).side(0)
+	in_(pins,1).side(00)
 	wrap()
 	#irq(block, rel(0))
 	#wrap()
@@ -70,14 +70,14 @@ while True:
     sm1.active(1)
     qsz=0
     while sm1.rx_fifo():# and qsz<8:
-        print(bin(sm1.get()))
+        #print(bin(sm1.get()))
         #print(int(sm1.get()))
-        #sm_got = bin(sm1.get())[2:]
-        #sm_length = 32-len(sm_got)
-        #if sm_length :
-        #    print("0"*sm_length+sm_got)
-        #else:
-        #    print(sm_got)
+        sm_got = bin(sm1.get())[2:]
+        sm_length = 32-len(sm_got)
+        if sm_length :
+            print("0"*sm_length+sm_got)
+        else:
+            print(sm_got)
         qsz=qsz+1
     print("------------------"+str(qsz))
     time.sleep(0.2)
