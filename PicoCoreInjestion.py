@@ -29,13 +29,13 @@ pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 @rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def wait_pin_low():
 	#wrap_target()
-	wait(0, gpio, 3).side(0b111)
-	irq(block, rel(0)).side(0b011)
-	wait(0, gpio, 2).side(0b011)
-	wait(1, gpio, 2).side(0b011)
+	wait(0, gpio, 3).side(00)
+	irq(block, rel(0)).side(00)
+	wait(0, gpio, 2).side(00)
+	wait(1, gpio, 2).side(00)
 	#in_(pins,1).side(0b011)
 	wrap_target()
-	in_(pins,1).side(0b001)
+	in_(pins,1).side(00)
 	wrap()
 	#irq(block, rel(0))
 	#wrap()
@@ -45,13 +45,13 @@ def handler(sm):
 	# Print a (wrapping) timestamp, and the state machine object.
 	print(time.ticks_ms(), sm)
 	pin5.value(0)
-	pin6.value(1)
-	pin7.value(1)
+	pin6.value(0)
+	pin7.value(0)
 
 
 
 # Instantiate StateMachine(1) with wait_pin_low program on Pin(17).
-sm1 = rp2.StateMachine(0, wait_pin_low,freq=60_000_000, sideset_base=pin5, in_base=pin8)
+sm1 = rp2.StateMachine(0, wait_pin_low,freq= 60_000_000, sideset_base=pin5, in_base=pin8)
 sm1.irq(handler)
 
 # Start the StateMachine's running.
@@ -70,6 +70,7 @@ while True:
     sm1.active(1)
     qsz=0
     while sm1.rx_fifo():# and qsz<8:
+        #print(bin(sm1.get()))
         #print(int(sm1.get()))
         sm_got = bin(sm1.get())[2:]
         sm_length = 32-len(sm_got)
