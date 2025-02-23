@@ -27,3 +27,4 @@ Refrences:-
 [AN135](https://www.ftdichip.com/Documents/AppNotes/AN_135_MPSSE_Basics.pdf)
 [AN165](https://www.ftdichip.com/Documents/AppNotes/AN_165_Establishing_Synchronous_245_FIFO_Communications_using_a_Morph-IC-II.pdf)
 [AN167](https://ftdichip.com/wp-content/uploads/2020/08/TN_167_FIFO_Basics.pdf)
+[AN124](https://www.ftdichip.cn/Support/Documents/AppNotes/oldAN_124_User_Guide_For_FT_PROG.pdf)
