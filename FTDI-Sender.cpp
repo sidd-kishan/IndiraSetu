@@ -246,13 +246,13 @@ int main()
 	//TxBuffer[1] = 0xFF;
 	int i = 0;
 	for (;i <= 928;) {
+		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
