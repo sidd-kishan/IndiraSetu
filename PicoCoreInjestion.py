@@ -26,6 +26,8 @@ pin7.value(1)
 
 pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 
+recv_start = 0
+
 @rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def wait_pin_low():
 	#wrap_target()
@@ -43,7 +45,9 @@ def wait_pin_low():
 
 def handler(sm):
 	# Print a (wrapping) timestamp, and the state machine object.
-	print(time.ticks_ms(), sm)
+	global recv_start
+	#print(time.ticks_ms(), sm)
+	recv_start=1
 
 
 
@@ -58,24 +62,35 @@ sm1.irq(handler)
 
 
 # Now, when Pin(16) or Pin(17) is pulled low a message will be printed to the REPL.
-
-while True:
-    #if pin16.value()==1:
-    #    print("1")
-    #else:
-    #    print("0")
-    sm1.active(1)
-    qsz=0
-    while sm1.rx_fifo():# and qsz<8:
-        #print(int(sm1.get()))
-        sm_got = bin(sm1.get())[2:]
-        sm_length = 32-len(sm_got)
-        if sm_length :
-            print("0"*sm_length+sm_got)
-        else:
-            print(sm_got)
-        qsz=qsz+1
-    print("------------------"+str(qsz))
-    time.sleep(0.2)
-    sm1.active(0)
-    sm1.restart()
+def main():
+    global recv_start
+    while True:
+        #if pin16.value()==1:
+        #    print("1")
+        #else:
+        #    print("0")
+        sm1.active(1)
+        qsz=0
+        while recv_start==1 and (not sm1.rx_fifo()):# and qsz<8:
+            qsz=0
+        while recv_start==1:
+            if sm1.rx_fifo():# and qsz<8:    
+                #print(int(sm1.get()))
+                sm_got = bin(sm1.get())[2:]
+                if qsz==0:
+                    print(sm_got.find("010101"))
+                #sm_length = 32-len(sm_got)
+                #if sm_length :
+                #    print("0"*sm_length+sm_got)
+                #else:
+                #    print(sm_got)
+                print(sm_got)
+                qsz=qsz+1
+            if qsz == 8:
+                recv_start = 0
+        print("------------------"+str(qsz))
+        time.sleep(0.2)
+        sm1.active(0)
+        sm1.restart()
+        
+main()
