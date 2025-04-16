@@ -78,7 +78,7 @@ def main():
                 #print(int(sm1.get()))
                 sm_got = bin(sm1.get())[2:]
                 if qsz==0:
-                    print(sm_got.find("010101"))
+                    print(sm_got.find("01010101"))
                 #sm_length = 32-len(sm_got)
                 #if sm_length :
                 #    print("0"*sm_length+sm_got)
