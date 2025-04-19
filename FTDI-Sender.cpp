@@ -48,7 +48,7 @@ int main()
 	DWORD EventDWord;
 	DWORD RxBytes;
 	DWORD TxBytes;
-	DWORD BytesReceived=0, BytesWritten=0;
+	DWORD BytesReceived = 0, BytesWritten = 0;
 	char TxBuffer[OneSector];
 
 
@@ -126,10 +126,103 @@ int main()
 
 	// --- Set up command buffers ---
 
-	uint8_t *recvBuffer = (uint8_t*)std::malloc(2000 * 1024);// [2000][1024];
+	uint8_t* recvBuffer = (uint8_t*)std::malloc(2000 * 1024);// [2000][1024];
 	unsigned long bytesWritten = 0;
 	unsigned long bytesRead = 0;
 
+	// --- Configure Port for MPSSE ---
+
+	// This procedure comes from FTDI application note
+	// "AN 135 - MPSSE Basics", "Section 4. Software Configuration".
+	// It's not clear yet if all steps are required for Lab 3, but
+	// Lab 3 works having followed these steps.
+	//                                                - Jon 
+
+	// Reset device
+
+	status = FT_ResetDevice(myDevice.ftHandle);
+
+	if (status != FT_OK) {
+		ft_error(status, "FT_ResetDevice", myDevice.ftHandle);
+	}
+
+	// Set USB transfer sizes
+
+	status = FT_SetUSBParameters(myDevice.ftHandle, 64, 64);
+
+	if (status != FT_OK) {
+		ft_error(status, "FT_SetUSBParameters", myDevice.ftHandle);
+	}
+
+	// Disable error characters
+
+	status = FT_SetChars(myDevice.ftHandle, 0, 0, 0, 0);
+
+	if (status != FT_OK) {
+		ft_error(status, "FT_SetChars", myDevice.ftHandle);
+	}
+
+	// Set device read/write timeouts
+
+	status = FT_SetTimeouts(myDevice.ftHandle, 1, 1);
+
+	if (status != FT_OK) {
+		ft_error(status, "FT_SetTimeouts", myDevice.ftHandle);
+	}
+
+	// Set timeout before flushing receive buffer
+
+	status = FT_SetLatencyTimer(myDevice.ftHandle, 1);
+
+	if (status != FT_OK) {
+		ft_error(status, "FT_SetLatencyTimer", myDevice.ftHandle);
+	}
+
+	// Disable flow control
+	status = FT_SetFlowControl(myDevice.ftHandle, FT_FLOW_NONE, 0, 0);
+
+	if (status != FT_OK) {
+		ft_error(status, "FT_SetFlowControl", myDevice.ftHandle);
+	}
+
+	// Reset MPSSE controller
+
+	status = FT_SetBitMode(myDevice.ftHandle, 0, 0);
+
+	if (status != FT_OK) {
+		ft_error(status, "FT_SetBitMode", myDevice.ftHandle);
+	}
+
+	std::chrono::milliseconds(10);
+
+	// Initialize MPSSE controller
+
+	status = FT_SetBitMode(myDevice.ftHandle, 0xFF, 0x40); // All pins outputs, MPSSE
+
+	if (status == FT_OK)
+	{
+		status = FT_SetLatencyTimer(myDevice.ftHandle, LatencyTimer);
+		status = FT_SetUSBParameters(myDevice.ftHandle, 0x10000, 0x10000);
+		status = FT_SetFlowControl(myDevice.ftHandle, FT_FLOW_RTS_CTS, 0, 0);
+		status = FT_Purge(myDevice.ftHandle, FT_PURGE_TX);
+		//access data from here  
+	}
+	else if (status != FT_OK) {
+		ft_error(status, "FT_SetBitMode", myDevice.ftHandle);
+	}
+
+	// --- Test bad command detection ---
+
+	/* TODO */
+
+	// --- Configure MPSSE ---
+
+	/* TODO */
+
+	// --- Write commands ---
+	// * iterate through 0x00 to 0xFF and output value on AD[7:0] every 100ms
+
+	uint8_t gpio_command[] = { 0x80, 0x00, 0xFF };
 	// 0x80: Command to set AD[7:0].
 	// 0x00: Output values for AD[7:0] (placeholder)
 	// 0xFF: GPIO directions for AD[7:0] (1 = output)
@@ -148,12 +241,12 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i] = 0x00;
 	}*/
-	
+
 	//TxBuffer[0] = 0x00;
 	//TxBuffer[1] = 0xFF;
 	int i = 0;
 	for (;i <= 928;) {
-		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;// Start Pattern
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
@@ -161,31 +254,23 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;// H
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;// e
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;// l
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -193,15 +278,23 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;// l
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;// o
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;// <space>
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
