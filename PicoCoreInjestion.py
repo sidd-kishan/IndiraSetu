@@ -59,38 +59,51 @@ sm1.irq(handler)
 #sm0.active(1)
 #sm1.active(1)
 
+def bin_to_hex(binary_str):
+    # Pad binary string to be multiple of 8 bits
+    if len(binary_str) % 8 != 0:
+        padding = 8 - (len(binary_str) % 8)
+        binary_str += '0' * padding
+
+    # Split into 8-bit chunks
+    bytes_list = [binary_str[i:i+8] for i in range(0, len(binary_str), 8)]
+
+    # Convert each to hex using hex() and strip "0x", pad with zero if needed
+    hex_str = ''
+    print_str = ''
+    for b in bytes_list:
+        byte_val = int(b, 2)
+        print_str += chr(byte_val)  # Append the character corresponding to the byte
+        h = hex(byte_val)[2:]  # remove '0x'
+        if len(h) == 1:
+            h = '0' + h  # pad with zero if necessary
+        hex_str += h
+
+    print(print_str)  # Print the corresponding ASCII characters
+    return hex_str  # Return the hex string
+
+
 
 
 # Now, when Pin(16) or Pin(17) is pulled low a message will be printed to the REPL.
 def main():
     global recv_start
     while True:
-        #if pin16.value()==1:
-        #    print("1")
-        #else:
-        #    print("0")
-        sm1.active(1)
-        qsz=0
-        while recv_start==1 and (not sm1.rx_fifo()):# and qsz<8:
-            qsz=0
-        while recv_start==1:
-            if sm1.rx_fifo():# and qsz<8:    
-                #print(int(sm1.get()))
-                sm_got = bin(sm1.get())[2:]
-                if qsz==0:
-                    print(sm_got.find("01010101"))
-                #sm_length = 32-len(sm_got)
-                #if sm_length :
-                #    print("0"*sm_length+sm_got)
-                #else:
-                #    print(sm_got)
-                print(sm_got)
-                qsz=qsz+1
-            if qsz == 8:
-                recv_start = 0
-        print("------------------"+str(qsz))
-        time.sleep(0.2)
-        sm1.active(0)
         sm1.restart()
+        sm1.active(1)
+        time.sleep(0.1)
+        sm1.active(0)
+        rx = []
+        qsz = 0
+        while sm1.rx_fifo():
+            sm_got = bin(sm1.get())[2:]
+            if qsz==0:
+                print(sm_got.find("01010101"))
+            if qsz==0 and sm_got.find("1010101") == 1:
+                sm_got = "0"+sm_got
+            print(sm_got)
+            print(bin_to_hex(sm_got))
+            qsz = qsz + 1
+        print("------------------"+str(qsz))
         
 main()
