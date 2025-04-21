@@ -37,8 +37,10 @@ def handle_falling(pin):
         sm_got = bin(sm1.get())[2:]
         if qsz==0:
             print(sm_got.find("01010101"))
+            sm_got = sm_got[sm_got.find("01010101"):]
         if qsz==0 and sm_got.find("1010101") == 1:
-            sm_got = "0"+sm_got
+            print(sm_got.find("1010101"))
+            sm_got = sm_got[sm_got.find("1010101"):]
         print(sm_got)
         #print(bin_to_hex(sm_got))
         qsz = qsz + 1
@@ -65,7 +67,7 @@ def handler(sm):
 	# Print a (wrapping) timestamp, and the state machine object.
 	global recv_start
 	#print(time.ticks_ms(), sm)
-	sm_got = bin(sm.get())[2:]
+	#sm_got = bin(sm.get())[2:]
 	recv_start=1
 
 
