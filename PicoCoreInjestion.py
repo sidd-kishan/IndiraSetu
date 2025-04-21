@@ -28,6 +28,24 @@ pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 
 recv_start = 0
 
+def handle_falling(pin):
+    print("Pin 3 went LOW!")
+    sm1.restart()
+    sm1.active(1)
+    qsz = 0
+    while sm1.rx_fifo():
+        sm_got = bin(sm1.get())[2:]
+        if qsz==0:
+            print(sm_got.find("01010101"))
+        if qsz==0 and sm_got.find("1010101") == 1:
+            sm_got = "0"+sm_got
+        print(sm_got)
+        #print(bin_to_hex(sm_got))
+        qsz = qsz + 1
+
+# Attach the interrupt
+pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
+
 @rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def wait_pin_low():
 	#wrap_target()
@@ -47,6 +65,7 @@ def handler(sm):
 	# Print a (wrapping) timestamp, and the state machine object.
 	global recv_start
 	#print(time.ticks_ms(), sm)
+	sm_got = bin(sm.get())[2:]
 	recv_start=1
 
 
@@ -89,21 +108,7 @@ def bin_to_hex(binary_str):
 def main():
     global recv_start
     while True:
-        sm1.restart()
-        sm1.active(1)
-        time.sleep(0.1)
-        sm1.active(0)
-        rx = []
-        qsz = 0
-        while sm1.rx_fifo():
-            sm_got = bin(sm1.get())[2:]
-            if qsz==0:
-                print(sm_got.find("01010101"))
-            if qsz==0 and sm_got.find("1010101") == 1:
-                sm_got = "0"+sm_got
-            print(sm_got)
-            print(bin_to_hex(sm_got))
-            qsz = qsz + 1
-        print("------------------"+str(qsz))
+        time.sleep(1)
+        print("------------------")
         
 main()
