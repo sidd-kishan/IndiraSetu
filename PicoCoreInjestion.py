@@ -29,21 +29,21 @@ pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 recv_start = 0
 
 def handle_falling(pin):
-    print("Pin 3 went LOW!")
     sm1.restart()
     sm1.active(1)
-    qsz = 0
-    while sm1.rx_fifo():
+    qsz = 13
+    while qsz > 0:
         sm_got = bin(sm1.get())[2:]
-        if qsz==0:
-            print(sm_got.find("01010101"))
-            sm_got = sm_got[sm_got.find("01010101"):]
-        if qsz==0 and sm_got.find("1010101") == 1:
-            print(sm_got.find("1010101"))
-            sm_got = sm_got[sm_got.find("1010101"):]
+        #if qsz==0:
+        #    print(sm_got.find("01010101"))
+        #    sm_got = sm_got[sm_got.find("01010101"):]
+        #if qsz==0 and sm_got.find("1010101") == 1:
+        #    print(sm_got.find("1010101"))
+        #    sm_got = sm_got[sm_got.find("1010101"):]
         print(sm_got)
         #print(bin_to_hex(sm_got))
-        qsz = qsz + 1
+        qsz = qsz - 1
+    sm1.active(0)
 
 # Attach the interrupt
 pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
@@ -67,7 +67,8 @@ def handler(sm):
 	# Print a (wrapping) timestamp, and the state machine object.
 	global recv_start
 	#print(time.ticks_ms(), sm)
-	#sm_got = bin(sm.get())[2:]
+	sm_got = bin(sm.get())[2:]
+	print(sm_got)
 	recv_start=1
 
 
