@@ -29,21 +29,22 @@ pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 recv_start = 0
 
 def handle_falling(pin):
+    print("Pin 3 went LOW!")
     sm1.restart()
     sm1.active(1)
-    qsz = 13
-    while qsz > 0:
+    qsz = 0
+    bin_str = ""
+    while sm1.rx_fifo():#qsz < 8:
         sm_got = bin(sm1.get())[2:]
-        #if qsz==0:
-        #    print(sm_got.find("01010101"))
-        #    sm_got = sm_got[sm_got.find("01010101"):]
-        #if qsz==0 and sm_got.find("1010101") == 1:
-        #    print(sm_got.find("1010101"))
-        #    sm_got = sm_got[sm_got.find("1010101"):]
-        print(sm_got)
-        #print(bin_to_hex(sm_got))
-        qsz = qsz - 1
-    sm1.active(0)
+        bin_str = bin_str + sm_got
+        qsz = qsz + 1
+    #sm1.active(0)
+    print(bin_str)
+    bin_str = bin_str[bin_str.find('010101')+7:]
+    for i in range(0, len(bin_str), 8):
+        byte = bin_str[i:i+8]
+        char = chr(int(byte, 2)) # char = chr(int(byte, 2)<<1) # This gets only first byte to be decoded
+        print(byte+" : "+char)
 
 # Attach the interrupt
 pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
@@ -52,9 +53,10 @@ pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
 def wait_pin_low():
 	#wrap_target()
 	wait(0, gpio, 3).side(7)
+	mov(null,isr).side(7)
 	irq(block, rel(0)).side(7)
-	wait(1, gpio, 2).side(7)
-	wait(0, gpio, 2).side(6)
+	wait(0, gpio, 2).side(7)
+	wait(1, gpio, 2).side(6)
 	#in_(pins,1).side(0b011)
 	wrap_target()
 	in_(pins,1).side(4)
@@ -67,8 +69,7 @@ def handler(sm):
 	# Print a (wrapping) timestamp, and the state machine object.
 	global recv_start
 	#print(time.ticks_ms(), sm)
-	sm_got = bin(sm.get())[2:]
-	print(sm_got)
+	#sm_got = bin(sm.get())[2:]
 	recv_start=1
 
 
