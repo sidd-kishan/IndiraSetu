@@ -61,7 +61,7 @@ pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
 #pin3.irq(trigger=Pin.IRQ_RISING, handler=handle_rising)
 
 
-@rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=31,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
+@rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def wait_pin_low():
 	#wrap_target()
 	wait(0, gpio, 3).side(7)
