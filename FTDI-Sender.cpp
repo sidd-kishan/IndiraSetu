@@ -374,7 +374,7 @@ int main()
 		//set interface into FT245 Synchronous FIFO mode 
 		while (1)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			std::this_thread::sleep_for(std::chrono::milliseconds(15));
 			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
 			if ((status == FT_OK) && (TxBytes == 0))
 			{
@@ -382,7 +382,7 @@ int main()
 				if (status == FT_OK)
 				{
 					// FT_Write OK  
-					std::cout << "\n Bytes Write " << BytesWritten << " Byte 0x" << byteToHex(TxBuffer[0]) << " 0x" << byteToHex(TxBuffer[1]) << " 0x" << byteToHex(TxBuffer[2]) << " 0x" << byteToHex(TxBuffer[3]) << " last byte 0x" << byteToHex(TxBuffer[255]);
+					//std::cout << "\n Bytes Write " << BytesWritten << " Byte 0x" << byteToHex(TxBuffer[0]) << " 0x" << byteToHex(TxBuffer[1]) << " 0x" << byteToHex(TxBuffer[2]) << " 0x" << byteToHex(TxBuffer[3]) << " last byte 0x" << byteToHex(TxBuffer[255]);
 					status = FT_Purge(myDevice.ftHandle, FT_PURGE_RX);
 					status = FT_Purge(myDevice.ftHandle, FT_PURGE_TX);
 				}
