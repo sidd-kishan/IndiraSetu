@@ -46,15 +46,23 @@ def handle_falling(pin):
         bin_str = bin_str + sm_got
         qsz = qsz + 1
     #sm1.active(0)
-    bin_str = [bin_str[bin_str.find('0101')+5:],bin_str[bin_str.find('10101010')+9:],bin_str[bin_str.find('01010101')+9:],bin_str[bin_str.find('101010')+7:],bin_str[bin_str.find('010101')+7:]]
-    for j in range(0, len(bin_str)):
-        print(bin_str[j])
+    bin_str_list = [bin_str[bin_str.find('0101')+5:],bin_str[bin_str.find('10101010')+9:],bin_str[bin_str.find('01010101')+9:],bin_str[bin_str.find('101010')+7:],bin_str[bin_str.find('010101')+7:]]
+    bin_str_found = {}
+    for j in range(0, len(bin_str_list)):
+        #print(bin_str[j])
         str_got = ""
-        for i in range(0, len(bin_str[j]), 8):
-            byte = bin_str[j][i:i+8]
+        for i in range(0, len(bin_str_list[j]), 8):
+            byte = bin_str_list[j][i:i+8]
             str_got += chr(int(byte, 2)) # char = chr(int(byte, 2)<<1) # This gets only first byte to be decoded
-        print(str_got.find("Hello world"))
-        print("***********************")
+        bin_str_index = str(str_got.find("Hello world"))
+        if bin_str_index in bin_str_found:
+            bin_str_found[bin_str_index] += 1
+        else:
+            bin_str_found[str(bin_str_index)] = 0
+    if bin_str_found["-1"]==4:
+        print(bin_str)
+    #print(bin_str)
+    print("***********************")
 
 # Attach the interrupt
 pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
@@ -67,7 +75,7 @@ def wait_pin_low():
 	wait(0, gpio, 3).side(7)
 	mov(isr,null).side(7)
 	irq(block, rel(0)).side(7)
-	wait(0, gpio, 2).side(7)
+	wait(0, gpio, 2).side(7)[1]
 	wait(1, gpio, 2).side(6)
 	#in_(pins,1).side(0b011)
 	wrap_target()
