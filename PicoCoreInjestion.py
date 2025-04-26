@@ -28,14 +28,23 @@ pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 
 recv_start = 0
 
+hit = 0
+miss = 0
+pkt_tot_len = 0
+good_pkt_tot_len =0
+
 def handle_rising(pin):
     global recv_start
     if recv_start == 1:
         recv_start = 0
 
 def handle_falling(pin):
-    print("Pin 3 went LOW!")
+    #print("Pin 3 went LOW!")
     global recv_start
+    global hit
+    global miss
+    global good_pkt_tot_len
+    global pkt_tot_len
     recv_start = 1
     qsz = 0
     bin_str = ""
@@ -46,7 +55,7 @@ def handle_falling(pin):
         bin_str = bin_str + sm_got
         qsz = qsz + 1
     #sm1.active(0)
-    bin_str_list = [bin_str[bin_str.find('0101')+5:],bin_str[bin_str.find('10101010')+9:],bin_str[bin_str.find('01010101')+9:],bin_str[bin_str.find('101010')+7:],bin_str[bin_str.find('010101')+7:]]
+    bin_str_list = [bin_str[bin_str.find('01010101')+9:]]#,bin_str[bin_str.find('010101')+7:]]
     bin_str_found = {}
     for j in range(0, len(bin_str_list)):
         #print(bin_str[j])
@@ -55,14 +64,16 @@ def handle_falling(pin):
             byte = bin_str_list[j][i:i+8]
             str_got += chr(int(byte, 2)) # char = chr(int(byte, 2)<<1) # This gets only first byte to be decoded
         bin_str_index = str(str_got.find("Hello world"))
-        if bin_str_index in bin_str_found:
-            bin_str_found[bin_str_index] += 1
-        else:
-            bin_str_found[str(bin_str_index)] = 0
-    if bin_str_found["-1"]==4:
-        print(bin_str)
-    #print(bin_str)
-    print("***********************")
+        bin_str_found[j] = bin_str_index
+    if bin_str_found[0]=='-1':# and bin_str_found[1]=='-1' :
+        miss +=1
+    else :
+        hit +=1
+        good_pkt_tot_len += len(bin_str)/8
+    pkt_tot_len += len(bin_str)/8
+        #print(bin_str)
+    #print(bin_str_found)
+    #print("***********************")
 
 # Attach the interrupt
 pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
@@ -131,8 +142,12 @@ def bin_to_hex(binary_str):
 # Now, when Pin(16) or Pin(17) is pulled low a message will be printed to the REPL.
 def main():
     global recv_start
+    global hit
+    global miss
+    global pkt_tot_len
+    global good_pkt_tot_len
     while True:
         time.sleep(1)
-        print("------------------")
+        print(str(hit)+"---------"+str(good_pkt_tot_len)+"/"+str(pkt_tot_len)+"---------"+str(miss))
         
 main()
