@@ -148,7 +148,7 @@ int main()
 
 	// Set USB transfer sizes
 
-	status = FT_SetUSBParameters(myDevice.ftHandle, 64, 64);
+	status = FT_SetUSBParameters(myDevice.ftHandle, 512, 512);
 
 	if (status != FT_OK) {
 		ft_error(status, "FT_SetUSBParameters", myDevice.ftHandle);
@@ -246,14 +246,14 @@ int main()
 	//TxBuffer[1] = 0xFF;
 	int i = 0;
 	for (;i <= 928;) {
-		TxBuffer[i++] = 0x00;// Start Pattern
-		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0xFF;// Start Pattern
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;// H
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -353,7 +353,7 @@ int main()
 			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
 
 			if (status == FT_OK && (TxBytes == 0)) {
-				status = FT_Read(myDevice.ftHandle, recvBuffer, 2000 * 1024, &BytesReceived);
+				status = FT_Read(myDevice.ftHandle, recvBuffer, 1024, &BytesReceived);
 				if (status == FT_OK)
 				{
 					std::cout << "\n Bytes Read 0x" << byteToHex(recvBuffer[0]);
@@ -378,7 +378,7 @@ int main()
 			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
 			if ((status == FT_OK) && (TxBytes == 0))
 			{
-				status = FT_Write(myDevice.ftHandle, TxBuffer, 255, &BytesWritten);
+				status = FT_Write(myDevice.ftHandle, TxBuffer, 256, &BytesWritten);
 				if (status == FT_OK)
 				{
 					// FT_Write OK  
