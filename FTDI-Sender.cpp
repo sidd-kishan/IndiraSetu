@@ -244,8 +244,8 @@ int main()
 
 	//TxBuffer[0] = 0x00;
 	//TxBuffer[1] = 0xFF;
-	int i = 0;
-	for (;i <= 928;) {
+	int i = 0,j=0;
+	for (;i <= 912;) {
 		TxBuffer[i++] = 0xFF;// Start Pattern
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
@@ -254,7 +254,15 @@ int main()
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;// H
+		TxBuffer[i++] = 0x00;// Close Pattern
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0xFF;
+		TxBuffer[i++] = 0x00;// H 01001000
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
@@ -262,7 +270,7 @@ int main()
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;// e
+		TxBuffer[i++] = 0x00;// e 01100101
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -270,7 +278,7 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0x00;// l
+		TxBuffer[i++] = 0x00;// l 01101100
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -278,7 +286,7 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;// l
+		TxBuffer[i++] = 0x00;// l 01101100
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -286,7 +294,7 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;// o
+		TxBuffer[i++] = 0x00;// o 01101111
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -294,7 +302,7 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0x00;// <space>
+		TxBuffer[i++] = 0x00;// <space> 00100000
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -302,7 +310,7 @@ int main()
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;// w 01110111
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
@@ -310,7 +318,7 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;//o 01101111
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -318,7 +326,7 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
-		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;//r 01110010
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
@@ -326,7 +334,7 @@ int main()
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;//l 01101100
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -334,7 +342,7 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
-		TxBuffer[i++] = 0x00;
+		TxBuffer[i++] = 0x00;//d 01100100
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
@@ -342,6 +350,88 @@ int main()
 		TxBuffer[i++] = 0xFF;
 		TxBuffer[i++] = 0x00;
 		TxBuffer[i++] = 0x00;
+		switch (j) {
+		case 0:TxBuffer[i++] = 0x00;//0 00000000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;j++;break;
+		case 1:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;j++;break;
+		case 2:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;j++;break;
+		case 3:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;j++;break;
+		case 4:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;j++;break;
+		case 5:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;j++;break;
+		case 6:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;j++;break;
+		case 7:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;j++;break;
+		case 8:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;j++;break;
+		case 9:TxBuffer[i++] = 0x00;//1 00110000
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0xFF;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0x00;
+			TxBuffer[i++] = 0xFF;j++;j = j % 10;break;
+		}
 	}
 	std::cout << "buf size:" << i;
 	// Infinite loop
@@ -353,10 +443,10 @@ int main()
 			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
 
 			if (status == FT_OK && (TxBytes == 0)) {
-				status = FT_Read(myDevice.ftHandle, recvBuffer, 1024, &BytesReceived);
+				status = FT_Read(myDevice.ftHandle, recvBuffer, 256, &BytesReceived);
 				if (status == FT_OK)
 				{
-					std::cout << "\n Bytes Read 0x" << byteToHex(recvBuffer[0]);
+					std::cout << "\n Bytes Read 0x" << byteToHex(recvBuffer[0])<<" "<<byteToHex(BytesReceived);
 					status = FT_Purge(myDevice.ftHandle, FT_PURGE_RX);
 					status = FT_Purge(myDevice.ftHandle, FT_PURGE_TX);
 				}
@@ -374,11 +464,11 @@ int main()
 		//set interface into FT245 Synchronous FIFO mode 
 		while (1)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(15));
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
 			if ((status == FT_OK) && (TxBytes == 0))
 			{
-				status = FT_Write(myDevice.ftHandle, TxBuffer, 256, &BytesWritten);
+				status = FT_Write(myDevice.ftHandle, TxBuffer, 129, &BytesWritten);
 				if (status == FT_OK)
 				{
 					// FT_Write OK  
