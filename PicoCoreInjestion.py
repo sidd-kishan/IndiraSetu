@@ -55,22 +55,28 @@ def handle_falling(pin):
         bin_str = bin_str + sm_got
         qsz = qsz + 1
     #sm1.active(0)
-    bin_str_list = [bin_str[bin_str.find('01010101')+9:]]#,bin_str[bin_str.find('010101')+7:]]
+    #print(str(len(bin_str))+" : "+bin_str)
+    print(str(bin_str.find('01010101') - bin_str.find('10101010')))# 8 is good
+    bin_str_list = [bin_str[bin_str.find('01010101')+8:]]
     bin_str_found = {}
     for j in range(0, len(bin_str_list)):
-        #print(bin_str[j])
         str_got = ""
         for i in range(0, len(bin_str_list[j]), 8):
             byte = bin_str_list[j][i:i+8]
             str_got += chr(int(byte, 2)) # char = chr(int(byte, 2)<<1) # This gets only first byte to be decoded
-        bin_str_index = str(str_got.find("Hello world"))
-        bin_str_found[j] = bin_str_index
-    if bin_str_found[0]=='-1':# and bin_str_found[1]=='-1' :
-        miss +=1
-    else :
-        hit +=1
-        good_pkt_tot_len += len(bin_str)/8
-    pkt_tot_len += len(bin_str)/8
+        if str_got.find("Hello world") > -1:
+            print(str_got)
+        else:
+            print(bin_str)
+        #print(str_got.find("Hello world"))
+    #    bin_str_index = str(str_got.find("Hello world"))
+    #    bin_str_found[j] = bin_str_index
+    #if bin_str_found[0]=='-1':# and bin_str_found[1]=='-1' :
+    #    miss +=1
+    #else :
+    #    hit +=1
+    #    good_pkt_tot_len += len(bin_str)/8
+    #pkt_tot_len += len(bin_str)/8
         #print(bin_str)
     #print(bin_str_found)
     #print("***********************")
@@ -80,18 +86,23 @@ pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
 #pin3.irq(trigger=Pin.IRQ_RISING, handler=handle_rising)
 
 
-@rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,fifo_join=rp2.PIO.JOIN_RX,in_shiftdir=rp2.PIO.SHIFT_LEFT)
+@rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def wait_pin_low():
 	#wrap_target()
 	wait(0, gpio, 3).side(7)
 	mov(isr,null).side(7)
 	irq(block, rel(0)).side(7)
-	wait(0, gpio, 2).side(7)[1]
-	wait(1, gpio, 2).side(6)
+	pull(block).side(7)
+	mov(x,osr).side(7)
+	wait(1, gpio, 2).side(7)
+	wait(0, gpio, 2).side(6)
 	#in_(pins,1).side(0b011)
-	wrap_target()
+	#wrap_target()
+	label("loop")
 	in_(pins,1).side(4)
-	wrap()
+	jmp(x_dec,"loop").side(4)
+	#mov(isr,null).side(7)
+	#wrap()
 	#irq(block, rel(0))
 	#wrap()
 
@@ -101,12 +112,14 @@ def handler(sm):
 	global recv_start
 	#print(time.ticks_ms(), sm)
 	#sm_got = bin(sm.get())[2:]
+	#print(sm_got)
+	sm.put(128)
 	recv_start=1
 
 
 
 # Instantiate StateMachine(1) with wait_pin_low program on Pin(17).
-sm1 = rp2.StateMachine(0, wait_pin_low,freq=60_000_000, sideset_base=pin5, in_base=pin8)
+sm1 = rp2.StateMachine(0, wait_pin_low,freq=120_000_000, sideset_base=pin5, in_base=pin8)
 sm1.irq(handler)
 
 # Start the StateMachine's running.
