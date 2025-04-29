@@ -52,22 +52,25 @@ def handle_falling(pin):
     sm1.active(1)
     while sm1.rx_fifo():#qsz < 8:
         sm_got = bin(sm1.get())[2:]
+        print(sm_got)
         bin_str = bin_str + sm_got
         qsz = qsz + 1
     #sm1.active(0)
     #print(str(len(bin_str))+" : "+bin_str)
     print(str(bin_str.find('01010101') - bin_str.find('10101010')))# 8 is good
-    bin_str_list = [bin_str[bin_str.find('01010101')+8:]]
+    bin_str_list = [bin_str[bin_str.find('10101010')+16:],bin_str[bin_str.find('01010101')+8:]]
     bin_str_found = {}
     for j in range(0, len(bin_str_list)):
         str_got = ""
         for i in range(0, len(bin_str_list[j]), 8):
             byte = bin_str_list[j][i:i+8]
             str_got += chr(int(byte, 2)) # char = chr(int(byte, 2)<<1) # This gets only first byte to be decoded
-        if str_got.find("Hello world") > -1:
+        if str_got.find("Hello world") > -1 or str_got.find("Hello") > -1:
             print(str_got)
+            hit += 1/ len(bin_str_list)
         else:
             print(bin_str)
+            miss += 1/ len(bin_str_list)
         #print(str_got.find("Hello world"))
     #    bin_str_index = str(str_got.find("Hello world"))
     #    bin_str_found[j] = bin_str_index
@@ -86,18 +89,19 @@ pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
 #pin3.irq(trigger=Pin.IRQ_RISING, handler=handle_rising)
 
 
-@rp2.asm_pio(sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,in_shiftdir=rp2.PIO.SHIFT_LEFT)
+@rp2.asm_pio(set_init=[rp2.PIO.OUT_LOW],sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def wait_pin_low():
 	#wrap_target()
 	wait(0, gpio, 3).side(7)
-	mov(isr,null).side(7)
 	irq(block, rel(0)).side(7)
 	pull(block).side(7)
 	mov(x,osr).side(7)
 	wait(1, gpio, 2).side(7)
-	wait(0, gpio, 2).side(6)
+	wait(0, gpio, 2).side(7)
 	#in_(pins,1).side(0b011)
 	#wrap_target()
+	set(pindirs,0).side(6)[3]
+	in_(isr,32).side(6)
 	label("loop")
 	in_(pins,1).side(4)
 	jmp(x_dec,"loop").side(4)
