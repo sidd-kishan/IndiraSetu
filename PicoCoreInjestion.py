@@ -33,60 +33,6 @@ miss = 0
 pkt_tot_len = 0
 good_pkt_tot_len =0
 
-def handle_rising(pin):
-    global recv_start
-    if recv_start == 1:
-        recv_start = 0
-
-def handle_falling(pin):
-    #print("Pin 3 went LOW!")
-    global recv_start
-    global hit
-    global miss
-    global good_pkt_tot_len
-    global pkt_tot_len
-    recv_start = 1
-    qsz = 0
-    bin_str = ""
-    sm1.restart()
-    sm1.active(1)
-    while sm1.rx_fifo():#qsz < 8:
-        sm_got = bin(sm1.get())[2:]
-        print(sm_got)
-        bin_str = bin_str + sm_got
-        qsz = qsz + 1
-    #sm1.active(0)
-    #print(str(len(bin_str))+" : "+bin_str)
-    print(str(bin_str.find('01010101') - bin_str.find('10101010')))# 8 is good
-    bin_str_list = [bin_str[bin_str.find('10101010')+16:],bin_str[bin_str.find('01010101')+8:]]
-    bin_str_found = {}
-    for j in range(0, len(bin_str_list)):
-        str_got = ""
-        for i in range(0, len(bin_str_list[j]), 8):
-            byte = bin_str_list[j][i:i+8]
-            str_got += chr(int(byte, 2)) # char = chr(int(byte, 2)<<1) # This gets only first byte to be decoded
-        if str_got.find("Hello world") > -1 or str_got.find("Hello") > -1:
-            print(str_got)
-            hit += 1/ len(bin_str_list)
-        else:
-            print(bin_str)
-            miss += 1/ len(bin_str_list)
-        #print(str_got.find("Hello world"))
-    #    bin_str_index = str(str_got.find("Hello world"))
-    #    bin_str_found[j] = bin_str_index
-    #if bin_str_found[0]=='-1':# and bin_str_found[1]=='-1' :
-    #    miss +=1
-    #else :
-    #    hit +=1
-    #    good_pkt_tot_len += len(bin_str)/8
-    #pkt_tot_len += len(bin_str)/8
-        #print(bin_str)
-    #print(bin_str_found)
-    #print("***********************")
-
-# Attach the interrupt
-pin3.irq(trigger=Pin.IRQ_FALLING, handler=handle_falling)
-#pin3.irq(trigger=Pin.IRQ_RISING, handler=handle_rising)
 
 
 @rp2.asm_pio(set_init=[rp2.PIO.OUT_LOW],sideset_init=(rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH,rp2.PIO.OUT_HIGH),autopush=True, push_thresh=32,in_shiftdir=rp2.PIO.SHIFT_LEFT)
@@ -96,19 +42,14 @@ def wait_pin_low():
 	irq(block, rel(0)).side(7)
 	pull(block).side(7)
 	mov(x,osr).side(7)
+	mov(isr,null).side(7)
 	wait(1, gpio, 2).side(7)
 	wait(0, gpio, 2).side(7)
-	#in_(pins,1).side(0b011)
-	#wrap_target()
 	set(pindirs,0).side(6)[3]
-	in_(isr,32).side(6)
+	#in_(isr,32).side(6)
 	label("loop")
 	in_(pins,1).side(4)
 	jmp(x_dec,"loop").side(4)
-	#mov(isr,null).side(7)
-	#wrap()
-	#irq(block, rel(0))
-	#wrap()
 
 
 def handler(sm):
@@ -126,33 +67,6 @@ def handler(sm):
 sm1 = rp2.StateMachine(0, wait_pin_low,freq=120_000_000, sideset_base=pin5, in_base=pin8)
 sm1.irq(handler)
 
-# Start the StateMachine's running.
-#sm0.active(1)
-#sm1.active(1)
-
-def bin_to_hex(binary_str):
-    # Pad binary string to be multiple of 8 bits
-    if len(binary_str) % 8 != 0:
-        padding = 8 - (len(binary_str) % 8)
-        binary_str += '0' * padding
-
-    # Split into 8-bit chunks
-    bytes_list = [binary_str[i:i+8] for i in range(0, len(binary_str), 8)]
-
-    # Convert each to hex using hex() and strip "0x", pad with zero if needed
-    hex_str = ''
-    print_str = ''
-    for b in bytes_list:
-        byte_val = int(b, 2)
-        print_str += chr(byte_val)  # Append the character corresponding to the byte
-        h = hex(byte_val)[2:]  # remove '0x'
-        if len(h) == 1:
-            h = '0' + h  # pad with zero if necessary
-        hex_str += h
-
-    print(print_str)  # Print the corresponding ASCII characters
-    return hex_str  # Return the hex string
-
 
 
 
@@ -161,10 +75,22 @@ def main():
     global recv_start
     global hit
     global miss
-    global pkt_tot_len
     global good_pkt_tot_len
+    global pkt_tot_len
+    recv_start = 1
+    qsz = 0
     while True:
-        time.sleep(1)
-        print(str(hit)+"---------"+str(good_pkt_tot_len)+"/"+str(pkt_tot_len)+"---------"+str(miss))
+        bin_str = ""
+        while pin3.value() == 0:
+            sm1.active(1)
+            time.sleep(0.0000001)
+            while sm1.rx_fifo():#qsz < 8:
+                sm_got = bin(sm1.get())[2:]
+                if len(sm_got) > 2:
+                    bin_str = bin_str + sm_got
+                    if len(bin_str) >127:
+                        print(bin_str[:128])
+                qsz = qsz + 1
+            sm1.active(0)
         
 main()
