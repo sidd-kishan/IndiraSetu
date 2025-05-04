@@ -88,9 +88,15 @@ def main():
                 sm_got = bin(sm1.get())[2:]
                 if len(sm_got) > 2:
                     bin_str = bin_str + sm_got
-                    if len(bin_str) >127:
-                        print(bin_str[:128])
-                qsz = qsz + 1
+                    pkt_mark = bin_str.find("10100101")
+                    if len(bin_str) >127 and pkt_mark > -1 and pkt_mark < 10:
+                        #print(bin_str[:128])
+                        bin_str = bin_str[pkt_mark+8:]
+                        str_got = ""
+                        for i in range(0, len(bin_str[:128]), 8):
+                            byte = bin_str[i:i+8]
+                            str_got += chr(int(byte, 2))
+                        print(str_got)
             sm1.active(0)
         
 main()
