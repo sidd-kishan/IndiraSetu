@@ -3,130 +3,125 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_PATTERN 256
+#define MAX_TX_SIZE 8192
 
-void print_help(const char *program_name) {
-    printf("Usage:\n");
-    printf("  %s \"<message>\" <tx_length> [--prefix \"<hex,hex,...>\"] [--suffix \"<hex,hex,...>\"]\n", program_name);
-    printf("\nArguments:\n");
-    printf("  \"<message>\"   The input string to convert bitwise into TxBuffer\n");
-    printf("  <tx_length>    Desired TxBuffer length in bytes (must be multiple of 8)\n");
-    printf("  --prefix       (optional) Comma-separated hex values to prepend per cycle\n");
-    printf("  --suffix       (optional) Comma-separated hex values to append per cycle\n");
-    printf("\nExample:\n");
-    printf("  %s \"Hi\" 48 --prefix \"0xAA\" --suffix \"0xBB\"\n", program_name);
-    printf("  %s --help\n", program_name);
+void print_usage(const char *prog) {
+    printf("Usage: %s \"message\" tx_len [--pattern \"0x00,0xFF,...\"]\n", prog);
+    printf("  message:  input message in quotes\n");
+    printf("  tx_len:   desired length of TxBuffer in bytes (must be multiple of 8)\n");
+    printf("  --pattern: (optional) comma-separated pattern to search (e.g., \"0x00,0xFF\")\n");
+    exit(1);
 }
 
-int parse_pattern(const char *pattern_str, unsigned char *buffer, int max_len) {
+int parse_pattern(const char *pattern_str, unsigned char *pattern_bytes) {
     int count = 0;
-    char temp[MAX_PATTERN];
-    strncpy(temp, pattern_str, MAX_PATTERN - 1);
-    temp[MAX_PATTERN - 1] = '\0';
-
-    char *token = strtok(temp, ",");
-    while (token && count < max_len) {
-        while (isspace(*token)) token++;
-        if (strncmp(token, "0x", 2) == 0 || strncmp(token, "0X", 2) == 0)
-            buffer[count++] = (unsigned char)strtol(token, NULL, 16);
-        else
-            buffer[count++] = (unsigned char)atoi(token);
-        token = strtok(NULL, ",");
+    const char *ptr = pattern_str;
+    while (*ptr) {
+        if (sscanf(ptr, "0x%hhx", &pattern_bytes[count]) == 1) {
+            count++;
+            ptr = strchr(ptr, ',');
+            if (!ptr) break;
+            ptr++; // move past comma
+        } else {
+            break;
+        }
     }
     return count;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3 || strcmp(argv[1], "--help") == 0) {
-        print_help(argv[0]);
-        return 0;
-    }
+    if (argc < 3) print_usage(argv[0]);
 
     const char *input = argv[1];
-    int desired_tx_len = atoi(argv[2]);
-
-    if (desired_tx_len <= 0 || desired_tx_len % 8 != 0) {
-        fprintf(stderr, "Error: <tx_length> must be a positive multiple of 8.\n");
+    int tx_len = atoi(argv[2]);
+    if (tx_len <= 0 || tx_len > MAX_TX_SIZE || tx_len % 8 != 0) {
+        fprintf(stderr, "Error: tx_len must be a positive multiple of 8 and <= %d\n", MAX_TX_SIZE);
         return 1;
     }
 
-    unsigned char prefix[MAX_PATTERN], suffix[MAX_PATTERN];
-    int prefix_len = 0, suffix_len = 0;
-
-    for (int i = 3; i < argc - 1; i++) {
-        if (strcmp(argv[i], "--prefix") == 0) {
-            prefix_len = parse_pattern(argv[i + 1], prefix, MAX_PATTERN);
-        } else if (strcmp(argv[i], "--suffix") == 0) {
-            suffix_len = parse_pattern(argv[i + 1], suffix, MAX_PATTERN);
+    // Parse optional pattern
+    unsigned char search_pattern[64];
+    int search_pattern_len = 0;
+    if (argc >= 5 && strcmp(argv[3], "--pattern") == 0) {
+        search_pattern_len = parse_pattern(argv[4], search_pattern);
+        if (search_pattern_len == 0) {
+            fprintf(stderr, "Invalid pattern format.\n");
+            return 1;
         }
     }
 
-    size_t input_len = strlen(input);
-    size_t group_payload_len = prefix_len + 8 * input_len + suffix_len;
+    int input_len = strlen(input);
+    int total_bytes_needed = tx_len;
+    int bits_per_char = 8;
+    int buffer_index = 0;
 
-    if (group_payload_len == 0 || (group_payload_len > desired_tx_len)) {
-        fprintf(stderr, "Error: Cannot fit one full cycle (prefix + message + suffix) in the tx_length.\n");
-        return 1;
-    }
+    unsigned char TxBuffer[MAX_TX_SIZE];
 
-    int max_groups = desired_tx_len / group_payload_len;
-    size_t actual_len = max_groups * group_payload_len;
-
-    if ((input_len * 8) >= desired_tx_len) {
-        printf("Input is sufficient to fill TxBuffer without repetition.\n");
+    if (input_len * 8 >= tx_len) {
+        printf("Input is sufficient to fill TxBuffer without repetition.\n\n");
     } else {
-        printf("Repeating pattern (prefix + message + suffix) to fill buffer.\n");
+        printf("Input will be repeated to fill TxBuffer.\n\n");
     }
 
-    unsigned char *TxBuffer = malloc(actual_len);
-    if (!TxBuffer) {
-        fprintf(stderr, "Memory allocation failed.\n");
-        return 1;
-    }
+    printf("TxBuffer[] = {\n");
 
-    int tx_index = 0;
-    int byte_num = 1;
+    int char_idx = 0;
+    int byte_count = 0;
 
-    printf("\nTxBuffer[] = {\n");
+    while (buffer_index < tx_len) {
+        // Insert 8 bytes for one character
+        unsigned char c = input[char_idx++];
+        if (char_idx >= input_len) char_idx = 0;
 
-    for (int group = 0; group < max_groups; group++) {
-        // Prefix
-        for (int i = 0; i < prefix_len && tx_index < actual_len; i++) {
-            TxBuffer[tx_index++] = prefix[i];
-            printf("0x%02X", prefix[i]);
-            if (tx_index < actual_len) printf(", ");
+        for (int bit = 7; bit >= 0; bit--) {
+            unsigned char bit_val = (c >> bit) & 1;
+            TxBuffer[buffer_index++] = bit_val ? 0xFF : 0x00;
         }
 
-        // Message (bitwise)
-        for (size_t j = 0; j < input_len && tx_index + 8 <= actual_len; j++) {
-            unsigned char c = input[j];
-            for (int bit = 7; bit >= 0; bit--) {
-                unsigned char val = ((c >> bit) & 1) ? 0xFF : 0x00;
-                TxBuffer[tx_index++] = val;
-                printf("0x%02X", val);
-                if (bit > 0 || (j != input_len - 1) || suffix_len > 0) printf(", ");
-            }
-
-            // Comment per byte
-            printf(" // byte #%d ", byte_num++);
-            if (isprint(c))
-                printf("('%c')", c);
-            else
-                printf("(0x%02X)", c);
-            printf("\n");
+        printf("  ");
+        for (int i = 0; i < 8; i++) {
+            printf("0x%02X", TxBuffer[buffer_index - 8 + i]);
+            if (i < 7) printf(", ");
         }
 
-        // Suffix
-        for (int i = 0; i < suffix_len && tx_index < actual_len; i++) {
-            TxBuffer[tx_index++] = suffix[i];
-            printf("0x%02X", suffix[i]);
-            if (i != suffix_len - 1 || group != max_groups - 1) printf(", ");
+        printf("  // byte #%d (", ++byte_count);
+        if (isprint(c)) {
+            printf("'%c')\n", c);
+        } else {
+            printf("0x%02X)\n", c);
         }
-
-        if (suffix_len > 0) printf("\n");
     }
 
     printf("};\n");
-    free(TxBuffer);
+
+    // Pattern search
+    if (search_pattern_len > 0) {
+        printf("\nSearching for pattern: ");
+        for (int i = 0; i < search_pattern_len; i++) {
+            printf("0x%02X", search_pattern[i]);
+            if (i < search_pattern_len - 1) printf(", ");
+        }
+        printf("\n");
+
+        int found = 0;
+        for (int i = 0; i <= tx_len - search_pattern_len; i++) {
+            int match = 1;
+            for (int j = 0; j < search_pattern_len; j++) {
+                if (TxBuffer[i + j] != search_pattern[j]) {
+                    match = 0;
+                    break;
+                }
+            }
+            if (match) {
+                printf("Pattern found at TxBuffer index: %d (byte #%d)\n", i, (i / 8) + 1);
+                found = 1;
+            }
+        }
+
+        if (!found) {
+            printf("Pattern not found.\n");
+        }
+    }
+
     return 0;
 }
