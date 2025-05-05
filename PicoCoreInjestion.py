@@ -43,9 +43,9 @@ def wait_pin_low():
 	pull(block).side(7)
 	mov(x,osr).side(7)
 	mov(isr,null).side(7)
+	set(pindirs,0).side(7)
 	wait(1, gpio, 2).side(7)
-	wait(0, gpio, 2).side(7)
-	set(pindirs,0).side(6)[3]
+	wait(0, gpio, 2).side(6)
 	#in_(isr,32).side(6)
 	label("loop")
 	in_(pins,1).side(4)
