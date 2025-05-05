@@ -110,9 +110,9 @@ def main():
                                 byte = bin_str[i:i+8]
                                 str_got += chr(int(byte, 2))
                                 crc_input.append(int(byte, 2))
-                            if hex(crc8(crc_input[:11])) == hex(crc_input[11]):
+                            if hex(crc8(crc_input[:12])) == hex(crc_input[12]):
                                 hit+=1
-                                print("hit: "+str(hit)+" bits on 8 channels recv: "+str(hit * 11*8*8)+" miss: "+str(miss)+" and crc8 verified:" + str_got[:11])
+                                print("hit: "+str(hit)+" bytes on 8 channels recv: "+str(hit * 12)+" miss: "+str(miss)+" and crc8 verified:" + str_got[:12])
                             else:
                                 miss +=1
                     #if len(bin_str) >127 and pkt_mark_s > -1 and pkt_mark_s < 10:
