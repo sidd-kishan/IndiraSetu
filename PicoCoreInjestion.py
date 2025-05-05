@@ -67,7 +67,17 @@ def handler(sm):
 sm1 = rp2.StateMachine(0, wait_pin_low,freq=120_000_000, sideset_base=pin5, in_base=pin8)
 sm1.irq(handler)
 
-
+def crc8(data):
+    crc = 0x00
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            if crc & 0x80:
+                crc = (crc << 1) ^ 0x07
+            else:
+                crc <<= 1
+            crc &= 0xFF  # Keep it 8-bit
+    return crc
 
 
 # Now, when Pin(16) or Pin(17) is pulled low a message will be printed to the REPL.
@@ -83,20 +93,35 @@ def main():
         bin_str = ""
         while pin3.value() == 0:
             sm1.active(1)
-            time.sleep(0.0000001)
+            #time.sleep(0.0000001)
             while sm1.rx_fifo():#qsz < 8:
                 sm_got = bin(sm1.get())[2:]
                 if len(sm_got) > 2:
                     bin_str = bin_str + sm_got
-                    pkt_mark = bin_str.find("10100101")
-                    if len(bin_str) >127 and pkt_mark > -1 and pkt_mark < 10:
+                    #pkt_mark_s = bin_str.find("01011010")
+                    if len(bin_str) >127:
                         #print(bin_str[:128])
-                        bin_str = bin_str[pkt_mark+8:]
-                        str_got = ""
-                        for i in range(0, len(bin_str[:128]), 8):
-                            byte = bin_str[i:i+8]
-                            str_got += chr(int(byte, 2))
-                        print(str_got)
+                        pkt_mark = bin_str.find("10100101")
+                        if pkt_mark > -1 and pkt_mark < 10:
+                            bin_str = bin_str[pkt_mark+8:]
+                            str_got = ""
+                            crc_input = bytearray()
+                            for i in range(0, len(bin_str[:128]), 8):
+                                byte = bin_str[i:i+8]
+                                str_got += chr(int(byte, 2))
+                                crc_input.append(int(byte, 2))
+                            if hex(crc8(crc_input[:11])) == hex(crc_input[11]):
+                                hit+=1
+                                print("hit: "+str(hit)+" bits on 8 channels recv: "+str(hit * 11*8*8)+" miss: "+str(miss)+" and crc8 verified:" + str_got[:11])
+                            else:
+                                miss +=1
+                    #if len(bin_str) >127 and pkt_mark_s > -1 and pkt_mark_s < 10:
+                    #    bin_str = bin_str[pkt_mark_s+8:]
+                    #    str_got = ""
+                    #    for i in range(0, len(bin_str[:128]), 8):
+                    #        byte = bin_str[i:i+8]
+                    #        str_got += chr(int(byte, 2))
+                    #    print("s: "+str_got)
             sm1.active(0)
         
 main()
