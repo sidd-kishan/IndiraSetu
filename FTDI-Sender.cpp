@@ -262,38 +262,6 @@ int main()
 	DWORD RxBytes;
 	DWORD TxBytes;
 	DWORD BytesReceived = 0, BytesWritten = 0;
-	const char* input = "Hello World0";
-	int tx_len = 1024;
-
-	// Define prefix, suffix, and pattern from strings
-	const char* prefix_str = "0xFF,0X00,0XFF,0x00,0x00,0xFF,0x00,0XFF";
-	const char* suffix_str = "0x00,0xFF,0x00,0xFF,0xFF,0x00,0xFF,0x00";
-	const char* pattern_str = "0x00,0xFF,0x00,0x00,0xFF,0x00,0x00,0x00";
-
-	unsigned char prefix[64], suffix[64], pattern[64];
-	int prefix_len = parse_hex_pattern(prefix_str, prefix, 64);
-	int suffix_len = parse_hex_pattern(suffix_str, suffix, 64);
-	int pattern_len = parse_hex_pattern(pattern_str, pattern, 64);
-	int actual_len = 0;
-	unsigned char* TxBuffer = build_tx_buffer(input, prefix, prefix_len, suffix, suffix_len, tx_len, 1, &actual_len);
-	if (!TxBuffer) {
-		fprintf(stderr, "Failed to build TxBuffer.\n");
-		return 1;
-	}
-
-	printf("Generated TxBuffer (%d bytes).\n", actual_len);
-	print_tx_buffer(TxBuffer, actual_len, input, strlen(input), prefix_len, suffix_len, 1);
-
-	if (pattern_len > 0) {
-		std::vector<int> matches = searchPatternMultiple(TxBuffer, tx_len, pattern, pattern_len);
-
-		std::cout << "Pattern found at indices: ";
-		for (int index : matches) {
-			std::cout << index << " ";
-		}
-		std::cout << std::endl;
-	}
-
 
 	// --- Get number of devices ---
 
@@ -450,14 +418,56 @@ int main()
 	else { // write to pico
 		//set interface into FT245 Synchronous FIFO mode 
 		// Initialize MPSSE controller
-
+		int msg_index = 0;
 		status = FT_SetBitMode(myDevice.ftHandle, 0xFF, 0x40); // All pins outputs, MPSSE
-
 		if (status != FT_OK) {
 			ft_error(status, "FT_SetBitMode", myDevice.ftHandle);
 		}
 		while (1)
 		{
+			const char* input[] = { 
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x33",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x34",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x35",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x36",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x37",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x38",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39"
+			};
+			int tx_len = 1024;
+			msg_index = (msg_index + 1) % 10;
+			// Define prefix, suffix, and pattern from strings
+			const char* prefix_str = "0xFF,0X00,0XFF,0x00,0x00,0xFF,0x00,0XFF";
+			const char* suffix_str = "0x00,0xFF,0x00,0xFF,0xFF,0x00,0xFF,0x00";
+			const char* pattern_str = "0x00,0xFF,0x00,0x00,0xFF,0x00,0x00,0x00";
+
+			unsigned char prefix[64], suffix[64], pattern[64];
+			int prefix_len = parse_hex_pattern(prefix_str, prefix, 64);
+			int suffix_len = parse_hex_pattern(suffix_str, suffix, 64);
+			int pattern_len = parse_hex_pattern(pattern_str, pattern, 64);
+			int actual_len = 0;
+			unsigned char* TxBuffer = build_tx_buffer(input[msg_index], prefix, prefix_len, suffix, suffix_len, tx_len, 1, &actual_len);
+			if (!TxBuffer) {
+				fprintf(stderr, "Failed to build TxBuffer.\n");
+				return 1;
+			}
+
+			//printf("Generated TxBuffer (%d bytes).\n", actual_len);
+			//print_tx_buffer(TxBuffer, actual_len, input, strlen(input), prefix_len, suffix_len, 1);
+			/*
+			if (pattern_len > 0) {
+				std::vector<int> matches = searchPatternMultiple(TxBuffer, tx_len, pattern, pattern_len);
+
+				std::cout << "Pattern found at indices: ";
+				for (int index : matches) {
+					std::cout << index << " ";
+				}
+				std::cout << std::endl;
+			}
+			*/
 			std::this_thread::sleep_for(std::chrono::microseconds(1));
 			status = FT_GetStatus(myDevice.ftHandle, &RxBytes, &TxBytes, &EventDWord);
 			if ((status == FT_OK) && (TxBytes == 0))
