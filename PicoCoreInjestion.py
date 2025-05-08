@@ -1,10 +1,14 @@
 from machine import Pin, SPI  # type: ignore
-from random import random, seed
+from random import random, seed, randint
 from ili9341 import Display, color565
 from utime import sleep_us, ticks_cpu, ticks_us, ticks_diff  # type: ignore
 import _thread
 import time
 import rp2
+import framebuf
+import gc
+import os
+import math
 
 pin2=Pin(2,Pin.IN)   #clkout -> AC5
 pin3=Pin(3,Pin.IN)   #RXF#   -> AC0
@@ -129,7 +133,7 @@ class Box(object):
             screen_width (int): Width of screen.
             screen_height (int): Width of height.
             size (int): Square side length.
-            display (ILI9341): display object.
+            display (framebuf): frame buffer.
             color (int): RGB565 color value.
         """
         self.size = size
@@ -140,83 +144,114 @@ class Box(object):
         # Generate non-zero random speeds between -5.0 and 5.0
         seed(ticks_cpu())
         r = random() * 10.0
-        self.x_speed = 5.0 - r if r < 5.0 else r - 10.0
+        self.x_speed = r - 5
         r = random() * 10.0
-        self.y_speed = 5.0 - r if r < 5.0 else r - 10.0
+        self.y_speed = r - 5
 
-        self.x = self.w / 2.0
-        self.y = self.h / 2.0
+        self.x = self.w / 2
+        self.y = self.h / 2
+
         self.prev_x = self.x
         self.prev_y = self.y
 
     def update_pos(self):
         """Update box position and speed."""
-        x = self.x
-        y = self.y
-        size = self.size
-        w = self.w
-        h = self.h
-        x_speed = abs(self.x_speed)
-        y_speed = abs(self.y_speed)
-        self.prev_x = x
-        self.prev_y = y
 
-        if x + size >= w - x_speed:
-            self.x_speed = -x_speed
-        elif x - size <= x_speed + 1:
-            self.x_speed = x_speed
+        # update position
+        self.x += self.x_speed
+        self.y += self.y_speed
 
-        if y + size >= h - y_speed:
-            self.y_speed = -y_speed
-        elif y - size <= y_speed + 1:
-            self.y_speed = y_speed
+        # limit checking
+        if self.x < 0:
+            self.x = 0
+            self.x_speed = -self.x_speed
+        elif self.x > (self.w - self.size):
+            self.x = self.w - self.size
+            self.x_speed = -self.x_speed
+        if self.y < 0:
+            self.y = 0
+            self.y_speed = -self.y_speed
+        elif self.y > (self.h - self.size):
+            self.y = self.h - self.size
+            self.y_speed = -self.y_speed
 
-        self.x = x + self.x_speed
-        self.y = y + self.y_speed
+        # extra processing load
+        # for num in range(1, 200):
+        #     num2 = math.sqrt(num)
 
     def draw(self):
         """Draw box."""
         x = int(self.x)
         y = int(self.y)
         size = self.size
-        prev_x = int(self.prev_x)
-        prev_y = int(self.prev_y)
-        self.display.fill_hrect(prev_x - size,
-                                prev_y - size,
-                                size, size, 0)
-        self.display.fill_hrect(x - size,
-                                y - size,
-                                size, size, self.color)
+        self.display.fill_rect(x, y, size, size, self.color)
+
+
+"""
+Show memory usage
+"""
+def free(full=False):
+    gc.collect()
+    F = gc.mem_free()
+    A = gc.mem_alloc()
+    T = F + A
+    P = '{0:.2f}%'.format(F / T * 100)
+    if not full:
+        return P
+    else:
+        return ('Total:{0} Free:{1} ({2})'.format(T, F, P))
+
+
+# set landscape screen
+screen_width = 320
+screen_height = 240
+screen_rotation = 90
+
+# FrameBuffer needs 2 bytes for every RGB565 pixel
+buffer_width = 320
+buffer_height = 240
+buffer = bytearray(buffer_width * buffer_height * 2)
+fbuf = framebuf.FrameBuffer(buffer, buffer_width, buffer_height, framebuf.RGB565)
 
 
 def test():
     """Bouncing box."""
+    global fbuf, buffer, buffer_width, buffer_height
     try:
         # Baud rate of 40000000 seems about the max
         spi = SPI(1, baudrate=40000000, sck=Pin(10), mosi=Pin(11))
-        display = Display(spi, dc=Pin(16), cs=Pin(18), rst=Pin(17))
+        display = Display(spi, dc=Pin(16), cs=Pin(18), rst=Pin(17),width=screen_width, height=screen_height, rotation=screen_rotation)
 
         display.clear()
 
-        colors = [color565(255, 0, 0),
-                  color565(0, 255, 0),
-                  color565(0, 0, 255),
-                  color565(255, 255, 0),
-                  color565(0, 255, 255),
-                  color565(255, 0, 255)]
-        sizes = [12, 11, 10, 9, 8, 7]
-        boxes = [Box(display.width, display.height, sizes[i], display,
-                 colors[i]) for i in range(6)]
+        boxes = [Box(buffer_width - 1, buffer_height - 1, randint(7, 40), fbuf,
+                     color565(randint(30, 256), randint(30, 256), randint(30, 256))) for i in range(5)]
 
+        print(free())
+
+        start_time = ticks_us()
+        frame_count = 0
         while True:
-            timer = ticks_us()
+
             for b in boxes:
                 b.update_pos()
+
+            for b in boxes:
                 b.draw()
-            # Attempt to set framerate to 30 FPS
-            timer_dif = 33333 - ticks_diff(ticks_us(), timer)
-            if timer_dif > 0:
-                sleep_us(timer_dif)
+
+            # render display
+            display.block(int((320 - buffer_width) / 2), int((240 - buffer_height) / 2),
+                          int((320 - buffer_width) / 2) + buffer_width - 1,
+                          int((240 - buffer_height) / 2) + buffer_height - 1, buffer)
+            # clear buffer
+            fbuf.fill(0)
+
+            frame_count += 1
+            if frame_count == 100:
+                frame_rate = 100 / ((ticks_us() - start_time) / 1000000)
+                print(frame_rate)
+                start_time = ticks_us()
+                frame_count = 0
 
     except KeyboardInterrupt:
         display.cleanup()
