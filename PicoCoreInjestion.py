@@ -56,7 +56,7 @@ def handler(sm):
 	#print(time.ticks_ms(), sm)
 	#sm_got = bin(sm.get())[2:]
 	#print(sm_got)
-	sm.put(128)
+	sm.put(256)
 	recv_start=1
 
 
@@ -97,14 +97,14 @@ def main():
                 if len(sm_got) > 2:
                     bin_str = bin_str + sm_got
                     #pkt_mark_s = bin_str.find("01011010")
-                    if len(bin_str) >127:
+                    if len(bin_str) >255:
                         #print(bin_str[:128])
                         pkt_mark = bin_str.find("10100101")
                         if pkt_mark > -1 and pkt_mark < 10:
                             bin_str = bin_str[pkt_mark+8:]
                             str_got = ""
                             crc_input = bytearray()
-                            for i in range(0, len(bin_str[:128]), 8):
+                            for i in range(0, len(bin_str[:256]), 8):
                                 byte = bin_str[i:i+8]
                                 str_got += chr(int(byte, 2))
                                 crc_input.append(int(byte, 2))
