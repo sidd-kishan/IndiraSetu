@@ -22,24 +22,12 @@ float g_zoom = 1.0f;
 POINT g_lastMousePos;
 bool g_mouseDown = false;
 
-const char* input[] = {
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x33\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x34\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x35\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x36\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x37\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x38\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39\x30\x30"
-};
-int total_input = 10;
+
 
 struct Triangle {
 	int v0, v1, v2;
 };
-static std::vector<Triangle> triangles;
+std::vector<Triangle> triangles;
 
 struct Vector3 {
 	float x, y, z;
@@ -47,6 +35,8 @@ struct Vector3 {
 	Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 	//int color_r, color_g, color_b;
 };
+static std::vector<Vector3> vertices;
+
 int color = 0;
 // Bresenham's Line Algorithm to draw a line
 void drawLine(HDC hdc, int x0, int y0, int x1, int y1) {
@@ -210,7 +200,6 @@ void renderWireframe(HDC hdc, const std::vector<Vector3>& vertices, const std::v
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	static std::vector<Vector3> vertices;
 	static std::vector<std::pair<int, int>> edges;
 	//static std::vector<Triangle> triangles;
 	switch (uMsg) {
@@ -238,7 +227,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			Vector3 tb = transformVertex(b, 0.0f, 0.0f, 1.0f, 160, 120);
 			Vector3 tc = transformVertex(c, 0.0f, 0.0f, 1.0f, 160, 120);
 
-			if((int)ta.x>255|| (int)ta.y > 255|| (int)tb.x > 255 || (int)tb.y > 255 || (int)tc.x > 255 || (int)tc.y > 255)
+			if ((int)ta.x > 255 || (int)ta.y > 255 || (int)tb.x > 255 || (int)tb.y > 255 || (int)tc.x > 255 || (int)tc.y > 255)
 				std::cout << " \n\n\n alert " << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n\n\n";
 			else
 				std::cout << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n";
@@ -461,7 +450,7 @@ unsigned char* build_tx_buffer(const char* input, unsigned char* prefix, int pre
 							   unsigned char* suffix, int suffix_len, int tx_len,
 							   int include_crc, int* actual_len) {
 	int input_len = strlen(input);
-	unsigned char* TxBuffer = (unsigned char*) malloc(tx_len * sizeof(unsigned char));
+	unsigned char* TxBuffer = (unsigned char*)malloc(tx_len * sizeof(unsigned char));
 	if (!TxBuffer) {
 		fprintf(stderr, "Memory allocation failed for TxBuffer.\n");
 		return NULL;
@@ -702,7 +691,7 @@ int main()
 		ft_error(status, "FT_SetTimeouts", myDevice.ftHandle);
 	}
 
-	
+
 	std::chrono::milliseconds(10);
 
 	// Infinite loop
@@ -776,6 +765,48 @@ int main()
 		status = FT_SetBitMode(myDevice.ftHandle, 0xFF, 0x40); // All pins outputs, MPSSE
 		if (status != FT_OK) {
 			ft_error(status, "FT_SetBitMode", myDevice.ftHandle);
+		}
+		const char* input[] = {
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x33\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x34\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x35\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x36\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x37\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x38\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39\x30\x30"
+		};
+		int total_input = 10;
+
+		for (const auto& tri : triangles) {
+			// Use original 3D coordinates for back-face test
+			const Vector3& a = vertices[tri.v0];
+			const Vector3& b = vertices[tri.v1];
+			const Vector3& c = vertices[tri.v2];
+
+			//std::cout << "Triangle: ("
+			//    << static_cast<int>(a.x) << "," << static_cast<int>(a.y) << ") -> ("
+			//    << static_cast<int>(b.x) << "," << static_cast<int>(b.y) << ") -> ("
+			//    << static_cast<int>(c.x) << "," << static_cast<int>(c.y) << ")\n";
+
+			if (!isVisibleFromOverhead(a, b, c)) continue; // Skip triangles facing away
+
+			// Transform to screen space for drawing
+			Vector3 ta = transformVertex(a, 0.0f, 0.0f, 1.0f, 160, 120);
+			Vector3 tb = transformVertex(b, 0.0f, 0.0f, 1.0f, 160, 120);
+			Vector3 tc = transformVertex(c, 0.0f, 0.0f, 1.0f, 160, 120);
+
+			if ((int)ta.x > 255 || (int)ta.y > 255 || (int)tb.x > 255 || (int)tb.y > 255 || (int)tc.x > 255 || (int)tc.y > 255)
+				std::cout << " \n\n\n alert " << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n\n\n";
+			else
+				std::cout << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n";
+
+			//drawLine(hdc, static_cast<int>(ta.x), static_cast<int>(ta.y), static_cast<int>(tb.x), static_cast<int>(tb.y));
+			//drawLine(hdc, static_cast<int>(tb.x), static_cast<int>(tb.y), static_cast<int>(tc.x), static_cast<int>(tc.y));
+			//drawLine(hdc, static_cast<int>(tc.x), static_cast<int>(tc.y), static_cast<int>(ta.x), static_cast<int>(ta.y));
+
 		}
 		while (1)
 		{
