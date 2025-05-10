@@ -22,6 +22,20 @@ float g_zoom = 1.0f;
 POINT g_lastMousePos;
 bool g_mouseDown = false;
 
+const char* input[] = {
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x33\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x34\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x35\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x36\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x37\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x38\x30\x30",
+				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39\x30\x30"
+};
+int total_input = 10;
+
 struct Triangle {
 	int v0, v1, v2;
 };
@@ -206,6 +220,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			MessageBox(hwnd, L"Failed to load OBJ", L"Error", MB_OK);
 		}
 		edges = createEdges(vertices);  // Create edges once
+		for (const auto& tri : triangles) {
+			// Use original 3D coordinates for back-face test
+			const Vector3& a = vertices[tri.v0];
+			const Vector3& b = vertices[tri.v1];
+			const Vector3& c = vertices[tri.v2];
+
+			//std::cout << "Triangle: ("
+			//    << static_cast<int>(a.x) << "," << static_cast<int>(a.y) << ") -> ("
+			//    << static_cast<int>(b.x) << "," << static_cast<int>(b.y) << ") -> ("
+			//    << static_cast<int>(c.x) << "," << static_cast<int>(c.y) << ")\n";
+
+			if (!isVisibleFromOverhead(a, b, c)) continue; // Skip triangles facing away
+
+			// Transform to screen space for drawing
+			Vector3 ta = transformVertex(a, 0.0f, 0.0f, 1.0f, 160, 120);
+			Vector3 tb = transformVertex(b, 0.0f, 0.0f, 1.0f, 160, 120);
+			Vector3 tc = transformVertex(c, 0.0f, 0.0f, 1.0f, 160, 120);
+
+			if((int)ta.x>255|| (int)ta.y > 255|| (int)tb.x > 255 || (int)tb.y > 255 || (int)tc.x > 255 || (int)tc.y > 255)
+				std::cout << " \n\n\n alert " << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n\n\n";
+			else
+				std::cout << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n";
+
+			//drawLine(hdc, static_cast<int>(ta.x), static_cast<int>(ta.y), static_cast<int>(tb.x), static_cast<int>(tb.y));
+			//drawLine(hdc, static_cast<int>(tb.x), static_cast<int>(tb.y), static_cast<int>(tc.x), static_cast<int>(tc.y));
+			//drawLine(hdc, static_cast<int>(tc.x), static_cast<int>(tc.y), static_cast<int>(ta.x), static_cast<int>(ta.y));
+
+		}
 		break;
 
 	case WM_LBUTTONDOWN:
@@ -737,20 +779,8 @@ int main()
 		}
 		while (1)
 		{
-			const char* input[] = { 
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x33\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x34\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x35\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x36\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x37\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x38\x30\x30",
-				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39\x30\x30"
-			};
 			int tx_len = 1024;
-			msg_index = (msg_index + 1) % 10;
+			msg_index = (msg_index + 1) % total_input;
 			// Define prefix, suffix, and pattern from strings
 			const char* prefix_str = "0xFF,0X00,0XFF,0x00,0x00,0xFF,0x00,0XFF";
 			const char* suffix_str = "";//"0x00,0xFF,0x00,0xFF,0xFF,0x00,0xFF,0x00";
