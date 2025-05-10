@@ -110,7 +110,7 @@ def main():
                                 crc_input.append(int(byte, 2))
                             if hex(crc8(crc_input[:14])) == hex(crc_input[14]):
                                 hit+=1
-                                print("hit: "+str(hit)+" bytes on 8 channels recv: "+str(hit * 14)+" miss: "+str(miss)+" and crc8 verified:" + str_got[:14])
+                                print("hit: "+str(hit)+" bytes on 8 channels recv: "+str(hit * 14)+" miss: "+str(miss)+" and crc8 verified:" + str_got[:14].encode('utf-8').hex())
                             else:
                                 miss +=1
                     #if len(bin_str) >127 and pkt_mark_s > -1 and pkt_mark_s < 10:
