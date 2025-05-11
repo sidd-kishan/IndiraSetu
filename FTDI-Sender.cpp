@@ -446,10 +446,9 @@ int parse_hex_pattern(const char* pattern_str, unsigned char* buffer, int max_le
 	return count;
 }
 // Function to build the TxBuffer by repeating message and adding CRC, prefix, and suffix
-unsigned char* build_tx_buffer(const char* input, unsigned char* prefix, int prefix_len,
+unsigned char* build_tx_buffer(const char* input, int input_len, unsigned char* prefix, int prefix_len,
 							   unsigned char* suffix, int suffix_len, int tx_len,
 							   int include_crc, int* actual_len) {
-	int input_len = strlen(input);
 	unsigned char* TxBuffer = (unsigned char*)malloc(tx_len * sizeof(unsigned char));
 	if (!TxBuffer) {
 		fprintf(stderr, "Memory allocation failed for TxBuffer.\n");
@@ -822,7 +821,7 @@ int main()
 			int suffix_len = parse_hex_pattern(suffix_str, suffix, 64);
 			int pattern_len = parse_hex_pattern(pattern_str, pattern, 64);
 			int actual_len = 0;
-			unsigned char* TxBuffer = build_tx_buffer(input[msg_index], prefix, prefix_len, suffix, suffix_len, tx_len, 1, &actual_len);
+			unsigned char* TxBuffer = build_tx_buffer(input[msg_index], 14, prefix, prefix_len, suffix, suffix_len, tx_len, 1, &actual_len);
 			if (!TxBuffer) {
 				fprintf(stderr, "Failed to build TxBuffer.\n");
 				return 1;
