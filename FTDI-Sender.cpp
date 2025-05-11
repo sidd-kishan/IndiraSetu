@@ -765,7 +765,7 @@ int main()
 		if (status != FT_OK) {
 			ft_error(status, "FT_SetBitMode", myDevice.ftHandle);
 		}
-		const char* input[] = {
+		char input[1024][15] = {
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32\x30\x30",
@@ -778,7 +778,10 @@ int main()
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39\x30\x30"
 		};
 		int total_input = 10;
-
+		Vector3 tmp_ta, tmp_tb, tmp_tc;
+		tmp_ta.x = 0;tmp_tb.x = 0;tmp_tc.x = 0;
+		tmp_ta.y = 0;tmp_tb.y = 0;tmp_tc.y = 0;
+		int triangles_count = 0;
 		for (const auto& tri : triangles) {
 			// Use original 3D coordinates for back-face test
 			const Vector3& a = vertices[tri.v0];
@@ -799,18 +802,44 @@ int main()
 
 			if ((int)ta.x > 255 || (int)ta.y > 255 || (int)tb.x > 255 || (int)tb.y > 255 || (int)tc.x > 255 || (int)tc.y > 255)
 				std::cout << " \n\n\n alert " << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n\n\n";
-			else
+			else {
 				std::cout << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n";
-
+				/*
+				if (triangles_count % 2 == 1) {
+					//std::cout << "a1(x1:" << (int)tmp_ta.x << ",y1:" << (int)tmp_ta.y << ") b1(x2:" << (int)tmp_tb.x << ",y2:" << (int)tmp_tb.y << ") c1(x3:" << (int)tmp_tc.x << ",y3:" << (int)tmp_tc.y << ") a2(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b2(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c2(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n";
+					input[triangles_count / 2][0] = (int)tmp_ta.x;input[triangles_count / 2][1] = (int)tmp_ta.y;
+					input[triangles_count / 2][2] = (int)tmp_tb.x;input[triangles_count / 2][3] = (int)tmp_tb.y;
+					input[triangles_count / 2][4] = (int)tmp_tc.x;input[triangles_count / 2][5] = (int)tmp_tc.y;
+					input[triangles_count / 2][6] = (int)ta.x;input[triangles_count / 2][7] = (int)ta.y;
+					input[triangles_count / 2][8] = (int)tb.x;input[triangles_count / 2][9] = (int)tb.y;
+					input[triangles_count / 2][10] = (int)tc.x;input[triangles_count / 2][11] = (int)tc.y;
+					total_input += 1;
+				}*/
+				tmp_ta.x = (int)ta.x;tmp_tb.x = (int)tb.x;tmp_tc.x = (int)tc.x;
+				tmp_ta.y = (int)ta.y;tmp_tb.y = (int)tb.y;tmp_tc.y = (int)tc.y;
+				triangles_count++;
+			}
 			//drawLine(hdc, static_cast<int>(ta.x), static_cast<int>(ta.y), static_cast<int>(tb.x), static_cast<int>(tb.y));
 			//drawLine(hdc, static_cast<int>(tb.x), static_cast<int>(tb.y), static_cast<int>(tc.x), static_cast<int>(tc.y));
 			//drawLine(hdc, static_cast<int>(tc.x), static_cast<int>(tc.y), static_cast<int>(ta.x), static_cast<int>(ta.y));
 
 		}
+		std::cout <<"total trigs set:"<< total_input;
+		int lable = 0;
 		while (1)
 		{
 			int tx_len = 1024;
 			msg_index = (msg_index + 1) % total_input;
+			input[msg_index][12] = (lable >> 8) & 0xFF;
+			input[msg_index][13] = lable & 0xFF;
+			/*
+			std::cout << "\n\rlabel bytes: "
+				<< std::hex << std::setw(2) << std::setfill('0')
+				<< (static_cast<int>(input[msg_index][12]) & 0xFF)
+				<< " " << std::setw(2) << std::setfill('0')
+				<< (static_cast<int>(input[msg_index][13]) & 0xFF);
+			*/
+			lable++;
 			// Define prefix, suffix, and pattern from strings
 			const char* prefix_str = "0xFF,0X00,0XFF,0x00,0x00,0xFF,0x00,0XFF";
 			const char* suffix_str = "";//"0x00,0xFF,0x00,0xFF,0xFF,0x00,0xFF,0x00";
@@ -828,7 +857,7 @@ int main()
 			}
 
 			//printf("Generated TxBuffer (%d bytes).\n", actual_len);
-			//print_tx_buffer(TxBuffer, actual_len, input, strlen(input), prefix_len, suffix_len, 1);
+			//print_tx_buffer(TxBuffer, actual_len, input[msg_index], 15, prefix_len, suffix_len, 1);
 			/*
 			if (pattern_len > 0) {
 				std::vector<int> matches = searchPatternMultiple(TxBuffer, tx_len, pattern, pattern_len);
