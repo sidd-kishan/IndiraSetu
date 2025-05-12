@@ -446,7 +446,7 @@ int parse_hex_pattern(const char* pattern_str, unsigned char* buffer, int max_le
 	return count;
 }
 // Function to build the TxBuffer by repeating message and adding CRC, prefix, and suffix
-unsigned char* build_tx_buffer(const char* input, int input_len, unsigned char* prefix, int prefix_len,
+unsigned char* build_tx_buffer(const unsigned char* input, int input_len, unsigned char* prefix, int prefix_len,
 							   unsigned char* suffix, int suffix_len, int tx_len,
 							   int include_crc, int* actual_len) {
 	unsigned char* TxBuffer = (unsigned char*)malloc(tx_len * sizeof(unsigned char));
@@ -765,7 +765,7 @@ int main()
 		if (status != FT_OK) {
 			ft_error(status, "FT_SetBitMode", myDevice.ftHandle);
 		}
-		char input[1024][15] = {
+		unsigned char input[1024][15] = {
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32\x30\x30",
@@ -804,17 +804,28 @@ int main()
 				std::cout << " \n\n\n alert " << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n\n\n";
 			else {
 				std::cout << "a(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n";
-				/*
+				
 				if (triangles_count % 2 == 1) {
+					msg_index = (triangles_count + 1) / 2;
+					//std::cout << std::dec << (int)tmp_ta.x;
+					//printf("%d", (int)tmp_ta.x);
 					//std::cout << "a1(x1:" << (int)tmp_ta.x << ",y1:" << (int)tmp_ta.y << ") b1(x2:" << (int)tmp_tb.x << ",y2:" << (int)tmp_tb.y << ") c1(x3:" << (int)tmp_tc.x << ",y3:" << (int)tmp_tc.y << ") a2(x1:" << (int)ta.x << ",y1:" << (int)ta.y << ") b2(x2:" << (int)tb.x << ",y2:" << (int)tb.y << ") c2(x3:" << (int)tc.x << ",y3:" << (int)tc.y << ")\n";
-					input[triangles_count / 2][0] = (int)tmp_ta.x;input[triangles_count / 2][1] = (int)tmp_ta.y;
-					input[triangles_count / 2][2] = (int)tmp_tb.x;input[triangles_count / 2][3] = (int)tmp_tb.y;
-					input[triangles_count / 2][4] = (int)tmp_tc.x;input[triangles_count / 2][5] = (int)tmp_tc.y;
-					input[triangles_count / 2][6] = (int)ta.x;input[triangles_count / 2][7] = (int)ta.y;
-					input[triangles_count / 2][8] = (int)tb.x;input[triangles_count / 2][9] = (int)tb.y;
-					input[triangles_count / 2][10] = (int)tc.x;input[triangles_count / 2][11] = (int)tc.y;
+					/*
+					input[msg_index][0] = (char)static_cast<int8_t>((int)tmp_ta.x);
+					input[msg_index][1] = (char)static_cast<int8_t>((int)tmp_ta.y);
+					input[msg_index][2] = (char)static_cast<int8_t>((int)tmp_tb.x);
+					input[msg_index][3] = (char)static_cast<int8_t>((int)tmp_tb.y);
+					input[msg_index][4] = (char)static_cast<int8_t>((int)tmp_tc.x);
+					input[msg_index][5] = (char)static_cast<int8_t>((int)tmp_tc.y);
+					input[msg_index][6] = (char)static_cast<int8_t>((int)ta.x);
+					input[msg_index][7] = (char)static_cast<int8_t>((int)ta.y);
+					input[msg_index][8] = (char)static_cast<int8_t>((int)tb.x);
+					input[msg_index][9] = (char)static_cast<int8_t>((int)tb.y);
+					input[msg_index][10] = (char)static_cast<int8_t>((int)tc.x);
+					input[msg_index][11] = (char)static_cast<int8_t>((int)tc.y);
+					*/
 					total_input += 1;
-				}*/
+				}
 				tmp_ta.x = (int)ta.x;tmp_tb.x = (int)tb.x;tmp_tc.x = (int)tc.x;
 				tmp_ta.y = (int)ta.y;tmp_tb.y = (int)tb.y;tmp_tc.y = (int)tc.y;
 				triangles_count++;
@@ -824,14 +835,17 @@ int main()
 			//drawLine(hdc, static_cast<int>(tc.x), static_cast<int>(tc.y), static_cast<int>(ta.x), static_cast<int>(ta.y));
 
 		}
-		std::cout <<"total trigs set:"<< total_input;
+		std::cout <<"total trigs set:" << std::dec << total_input;
 		int lable = 0;
+		msg_index = 0;
+		total_input = 10;
 		while (1)
 		{
 			int tx_len = 1024;
 			msg_index = (msg_index + 1) % total_input;
-			input[msg_index][12] = (lable >> 8) & 0xFF;
-			input[msg_index][13] = lable & 0xFF;
+			input[msg_index][12] = (char)tmp_ta.x;//(lable >> 8) & 0xFF;
+			input[msg_index][13] = 85;//(lable) & 0xFF;
+			//input[msg_index][14] = lable & 0xFF;
 			/*
 			std::cout << "\n\rlabel bytes: "
 				<< std::hex << std::setw(2) << std::setfill('0')
@@ -839,6 +853,9 @@ int main()
 				<< " " << std::setw(2) << std::setfill('0')
 				<< (static_cast<int>(input[msg_index][13]) & 0xFF);
 			*/
+			//std::cout << input[msg_index][0] << input[msg_index][1] << input[msg_index][2] << input[msg_index][3] << input[msg_index][4] << input[msg_index][5] << input[msg_index][6] << input[msg_index][7] << input[msg_index][8] << input[msg_index][9] << input[msg_index][10] << input[msg_index][11];
+			//std::cout << std::dec << (int)input[msg_index][12] << (int)input[msg_index][13] << "\n";
+			//std::cout << std::dec << strlen(input[msg_index]);
 			lable++;
 			// Define prefix, suffix, and pattern from strings
 			const char* prefix_str = "0xFF,0X00,0XFF,0x00,0x00,0xFF,0x00,0XFF";
