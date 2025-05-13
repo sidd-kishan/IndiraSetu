@@ -198,6 +198,53 @@ void renderWireframe(HDC hdc, const std::vector<Vector3>& vertices, const std::v
 	std::cout << edge_count << " trigs: " << triangle_count << "\n";
 }
 
+void writeTrianglesToCSV(const std::string& filename, const std::vector<Triangle>& triangles,
+	const std::vector<Vector3>& vertices, float pan, float tilt, float zoom, float tx, float ty) {
+	std::ofstream file(filename);
+	if (!file.is_open()) {
+		std::cerr << "Failed to open output CSV file!" << std::endl;
+		return;
+	}
+
+	int triCounter = 0;
+	std::vector<float> lineBuffer;
+	srand(42); // Seed for reproducible color
+
+	for (const auto& tri : triangles) {
+		Vector3 a = transformVertex(vertices[tri.v0], pan, tilt, zoom, tx, ty);
+		Vector3 b = transformVertex(vertices[tri.v1], pan, tilt, zoom, tx, ty);
+		Vector3 c = transformVertex(vertices[tri.v2], pan, tilt, zoom, tx, ty);
+
+		// Check all x/y < 255
+		if (a.x >= 255 || a.y >= 255 || b.x >= 255 || b.y >= 255 || c.x >= 255 || c.y >= 255) continue;
+		if (a.x < 0 || a.y < 0 || b.x < 0 || b.y < 0 || c.x < 0 || c.y < 0) continue;
+
+		// Append triangle coords to line
+		lineBuffer.push_back(a.x); lineBuffer.push_back(a.y);
+		lineBuffer.push_back(b.x); lineBuffer.push_back(b.y);
+		lineBuffer.push_back(c.x); lineBuffer.push_back(c.y);
+
+		// Add fake color (random or based on triangle index)
+		int color = rand() % 256;
+		lineBuffer.push_back(color);
+
+		++triCounter;
+
+		if (triCounter % 2 == 0) {
+			// Write 2 triangles per line = 14 values
+			for (size_t i = 0; i < lineBuffer.size(); ++i) {
+				file << std::setw(3) << std::setfill('0') << static_cast<int>(lineBuffer[i]);
+				if (i != lineBuffer.size() - 1) file << ",";
+			}
+			file << "\n";
+			lineBuffer.clear();
+		}
+	}
+
+	file.close();
+	std::cout << "Triangles exported to: " << filename << std::endl;
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	static std::vector<std::pair<int, int>> edges;
 	//static std::vector<Triangle> triangles;
@@ -265,6 +312,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	}
 
 	case WM_DESTROY:
+		writeTrianglesToCSV("C:\\Users\\Pentest1\\Desktop\\output.csv", triangles, vertices, g_pan, g_tilt, g_zoom, 160.0f, 120.0f);
 		PostQuitMessage(0);
 		break;
 
