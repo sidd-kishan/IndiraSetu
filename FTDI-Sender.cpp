@@ -438,6 +438,46 @@ int main()
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39\x30\x30"
 		};
 		int total_input = 10;
+
+		std::ifstream file("C:\\Users\\Pentest1\\Desktop\\data.csv");
+		std::string line;
+
+		while (std::getline(file, line) && total_input < 1024) {
+			std::istringstream ss(line);
+			std::string token;
+			int col = 0;
+
+			while (std::getline(ss, token, ',') && col < 14) {
+				int value = std::stoi(token);
+
+				if (value < 0 || value > 255) {
+					std::cerr << "Invalid value at line " << total_input << ", col " << col << ": " << value << std::endl;
+					return 1;
+				}
+
+				input[total_input][col] = static_cast<unsigned char>(value);
+				++col;
+			}
+
+			if (col != 14) {
+				std::cerr << "Line " << total_input << " does not have exactly 14 values.\n";
+				return 1;
+			}
+
+			++total_input;
+		}
+
+		std::cout << "Loaded " << total_input << " rows from CSV.\n";
+
+		// (Optional) Print the loaded data
+		for (int i = 0; i < total_input; ++i) {
+			for (int j = 0; j < 14; ++j) {
+				std::cout << static_cast<int>(input[i][j]) << (j < 13 ? ',' : '\n');
+			}
+		}
+
+
+
 		int lable = 0;
 		msg_index = 0;
 		total_input = 10;
