@@ -110,9 +110,10 @@ def main():
                                 crc_input.append(int(byte, 2))
                             if hex(crc8(crc_input[:14])) == hex(crc_input[14]):
                                 hit+=1
-                                print("hit: "+str(hit)+" bytes on 8 channels recv: "+str(hit * 14)+" miss: "+str(miss)+" and crc8 verified:" + str(crc_input[12])+ str(crc_input[13]))
+                                print("hit: "+str(hit)+" bytes on 8 channels recv: "+str(hit * 14)+" miss: "+str(miss)+" and crc8 verified:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
                             else:
                                 miss +=1
+                                #print("crc8 invalid:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
                     #if len(bin_str) >127 and pkt_mark_s > -1 and pkt_mark_s < 10:
                     #    bin_str = bin_str[pkt_mark_s+8:]
                     #    str_got = ""
