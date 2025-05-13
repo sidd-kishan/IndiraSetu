@@ -425,7 +425,7 @@ int main()
 		if (status != FT_OK) {
 			ft_error(status, "FT_SetBitMode", myDevice.ftHandle);
 		}
-		unsigned char input[1024][15] = {
+		unsigned char input[1024][15];/* = {
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x30\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x31\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x32\x30\x30",
@@ -436,8 +436,8 @@ int main()
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x37\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x38\x30\x30",
 				"\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x39\x30\x30"
-		};
-		int total_input = 10;
+		};*/
+		int total_input = 0;
 
 		std::ifstream file("C:\\Users\\Pentest1\\Desktop\\data.csv");
 		std::string line;
@@ -480,7 +480,7 @@ int main()
 
 		int lable = 0;
 		msg_index = 0;
-		total_input = 10;
+		//total_input = 10;
 		while (1)
 		{
 			int tx_len = 1024;
