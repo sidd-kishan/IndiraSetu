@@ -15,6 +15,24 @@
 #include <string>
 #include <ctype.h>
 
+constexpr int kMaxRows = 1024;
+constexpr int kColsPerRow = 14;
+constexpr int WINDOW_WIDTH = 320;
+constexpr int WINDOW_HEIGHT = 240;
+
+
+struct Point2D {
+	int x, y;
+};
+
+struct Triangle2D {
+	Point2D a, b, c;
+	unsigned char color;
+};
+
+std::vector<Triangle2D> triangleList;
+
+
 void bit_expand_byte(unsigned char byte, unsigned char* out);
 
 // Function to print the buffer in a readable format (similar to the previous tool)
@@ -253,6 +271,42 @@ void ft_error(FT_STATUS status, const char* message);
 // (Delegates to ft_error(FT_STATUS, const char*))
 void ft_error(FT_STATUS status, const char* message, FT_HANDLE handle);
 
+void drawTriangle(HDC hdc, const Triangle2D& tri) {
+	HPEN pen = CreatePen(PS_SOLID, 1, RGB(tri.color, tri.color, tri.color));
+	HGDIOBJ oldPen = SelectObject(hdc, pen);
+
+	MoveToEx(hdc, tri.a.x, tri.a.y, NULL);
+	LineTo(hdc, tri.b.x, tri.b.y);
+	LineTo(hdc, tri.c.x, tri.c.y);
+	LineTo(hdc, tri.a.x, tri.a.y); // close
+
+	SelectObject(hdc, oldPen);
+	DeleteObject(pen);
+}
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	switch (msg) {
+	case WM_PAINT: {
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hwnd, &ps);
+		RECT rect;
+		GetClientRect(hwnd, &rect);
+		FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 1));
+		for (const auto& tri : triangleList)
+			drawTriangle(hdc, tri);
+		EndPaint(hwnd, &ps);
+		break;
+	}
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hwnd, msg, wParam, lParam);
+	}
+	return 0;
+}
+
+
 
 /*** MAIN PROGRAM ***/
 
@@ -265,6 +319,26 @@ int main()
 	DWORD TxBytes;
 	DWORD BytesReceived = 0, BytesWritten = 0;
 
+
+	const wchar_t CLASS_NAME[] = L"MyTriangleWindow";
+	WNDCLASS wc = {};
+	wc.lpfnWndProc = WndProc;
+	wc.hInstance = GetModuleHandle(NULL);
+	wc.lpszClassName = CLASS_NAME;
+	RegisterClass(&wc);
+
+	HWND hwnd = CreateWindowEx(
+		0, CLASS_NAME, L"Triangle Viewer",
+		WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
+		CW_USEDEFAULT, CW_USEDEFAULT, 320, 240,
+		NULL, NULL, wc.hInstance, NULL);
+
+	if (!hwnd) {
+		std::cerr << "Window creation failed.\n";
+		return 1;
+	}
+
+	
 	// --- Get number of devices ---
 
 	unsigned long deviceCount = 0;
@@ -476,15 +550,36 @@ int main()
 			}
 		}
 
+		for (int i = 0; i < total_input; ++i) {
+			unsigned char* row = input[i];
 
+			Triangle2D t1 = {
+				{ row[0], row[1] }, { row[2], row[3] }, { row[4], row[5] }, row[12]
+			};
+			Triangle2D t2 = {
+				{ row[6], row[7] }, { row[8], row[9] }, { row[10], row[11] }, row[13]
+			};
+
+			triangleList.push_back(t1);
+			triangleList.push_back(t2);
+		}
+		ShowWindow(hwnd, SW_SHOW);
+		UpdateWindow(hwnd);
+
+		MSG msg = {};
+		while (GetMessage(&msg, NULL, 0, 0)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 
 		int lable = 0;
 		msg_index = 0;
 		//total_input = 10;
+		srand(static_cast<unsigned int>(time(0)));
 		while (1)
 		{
 			int tx_len = 1024;
-			msg_index = (msg_index + 1) % total_input;
+			msg_index = (msg_index + rand()) % total_input;
 			lable++;
 			// Define prefix, suffix, and pattern from strings
 			const char* prefix_str = "0xFF,0X00,0XFF,0x00,0x00,0xFF,0x00,0XFF";
