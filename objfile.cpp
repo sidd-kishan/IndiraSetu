@@ -21,6 +21,8 @@ float g_zoom = 1.0f;
 POINT g_lastMousePos;
 bool g_mouseDown = false;
 
+float tx = 160.0f;
+float ty = 200.0f;
 
 
 struct Triangle {
@@ -181,7 +183,7 @@ void renderWireframe(HDC hdc, const std::vector<Vector3>& vertices, const std::v
 		//    << static_cast<int>(b.x) << "," << static_cast<int>(b.y) << ") -> ("
 		//    << static_cast<int>(c.x) << "," << static_cast<int>(c.y) << ")\n";
 
-		if (!isVisibleFromOverhead(a, b, c)) continue; // Skip triangles facing away
+		//if (!isVisibleFromOverhead(a, b, c)) continue; // Skip triangles facing away
 
 		// Transform to screen space for drawing
 		Vector3 ta = transformVertex(a, pan, tilt, zoom, tx, ty);
@@ -302,8 +304,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		FillRect(hdc, &clientRect, bgBrush);
 		DeleteObject(bgBrush);
 
-		float tx = 160.0f;
-		float ty = 120.0f;
+		
 
 		renderWireframe(hdc, vertices, edges, triangles, g_pan, g_tilt, g_zoom, tx, ty);
 
@@ -312,7 +313,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	}
 
 	case WM_DESTROY:
-		writeTrianglesToCSV("C:\\Users\\Pentest1\\Desktop\\output.csv", triangles, vertices, g_pan, g_tilt, g_zoom, 160.0f, 120.0f);
+		writeTrianglesToCSV("C:\\Users\\Pentest1\\Desktop\\output.csv", triangles, vertices, g_pan, g_tilt, g_zoom, tx, ty);
 		PostQuitMessage(0);
 		break;
 
