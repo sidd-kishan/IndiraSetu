@@ -1,5 +1,5 @@
 # IndraSetu
-### pi pico -> ft232h
+## pi pico <-> ft232h
 ### GPIO2 -> CLKOUT
 ### GPIO3 -> RXF#
 ### GPIO4 -> TXE#
@@ -10,7 +10,9 @@
 
 ### GPIO8 -> BIT0
 
-### VBUS  -> 3.3v
+### 3v3  -> 3.3v
+
+## pi pico -> ili9341 
 
 Sending data which is emiting from pc through ft232h into pi pico with the help of PIO state machine
 
