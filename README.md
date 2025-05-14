@@ -1,18 +1,19 @@
 # IndraSetu
 ## pi pico <-> ft232h
-### GPIO2 -> CLKOUT
-### GPIO3 -> RXF#
-### GPIO4 -> TXE#
+#### GPIO2 -> CLKOUT
+#### GPIO3 -> RXF#
+#### GPIO4 -> TXE#
 
-### GPIO5 -> OE#
-### GPIO6 -> RD#
-### GPIO7 -> WR#
+#### GPIO5 -> OE#
+#### GPIO6 -> RD#
+#### GPIO7 -> WR#
 
-### GPIO8 -> BIT0
+#### GPIO8 -> BIT0
 
-### 3v3  -> 3.3v
+#### 3v3  + 3.3v -> ili9341 VCC -> LED ( this is for the lcd back light will be only be labled as led ) needs 3v3 volts from both the chips to balance current draw.
 
 ## pi pico -> ili9341 
+
 
 Sending data which is emiting from pc through ft232h into pi pico with the help of PIO state machine
 
