@@ -9,6 +9,11 @@ import framebuf
 import gc
 import os
 import math
+import heapq
+
+heap = []
+
+heapq.heapify(heap)
 
 pin2=Pin(2,Pin.IN)   #clkout -> AC5
 pin3=Pin(3,Pin.IN)   #RXF#   -> AC0
@@ -110,7 +115,7 @@ def main():
                                 crc_input.append(int(byte, 2))
                             if hex(crc8(crc_input[:14])) == hex(crc_input[14]):
                                 hit+=1
-                                print("hit: "+str(hit)+" bytes on 8 channels recv: "+str(hit * 14)+" miss: "+str(miss)+" and crc8 verified:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
+                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13]])                            
                             else:
                                 miss +=1
                                 #print("crc8 invalid:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
@@ -182,10 +187,21 @@ class Box(object):
 
     def draw(self):
         """Draw box."""
-        x = int(self.x)
-        y = int(self.y)
-        size = self.size
-        self.display.fill_rect(x, y, size, size, self.color)
+        try:
+            top = heapq.heappop(heap)
+        except:
+            x = int(self.x)
+            y = int(self.y)
+            size = self.size
+            #self.display.fill_rect(x, y, size, size, self.color)
+            return
+        print("verified:"+ str(top[0])+" "+ str(top[1])+" "+ str(top[2])+" " + str(top[3])+" "+ str(top[4])+" "+ str(top[5])+" " + str(top[6])+" "+ str(top[7])+" "+ str(top[8])+" " + str(top[9])+" "+ str(top[10])+" "+ str(top[11])+" " + str(top[12])+" "+ str(top[13]))
+        self.display.line(top[0], top[1], top[2], top[3], top[12]*top[13])
+        self.display.line(top[2], top[3], top[4], top[5], top[12]*top[13])
+        self.display.line(top[4], top[5], top[0], top[1], top[12]*top[13])
+        self.display.line(top[6], top[7], top[8], top[9], top[12]*top[13])
+        self.display.line(top[8], top[9], top[10], top[11], top[12]*top[13])
+        self.display.line(top[10], top[11], top[6], top[7], top[12]*top[13])
 
 
 """
@@ -225,7 +241,7 @@ def test():
 
         display.clear()
 
-        boxes = [Box(buffer_width - 1, buffer_height - 1, randint(7, 40), fbuf,
+        boxes = [Box(1,1, randint(7, 40), fbuf,
                      color565(randint(30, 256), randint(30, 256), randint(30, 256))) for i in range(5)]
 
         print(free())
@@ -245,7 +261,7 @@ def test():
                           int((320 - buffer_width) / 2) + buffer_width - 1,
                           int((240 - buffer_height) / 2) + buffer_height - 1, buffer)
             # clear buffer
-            fbuf.fill(0)
+            #fbuf.fill(0)
 
             frame_count += 1
             if frame_count == 100:
