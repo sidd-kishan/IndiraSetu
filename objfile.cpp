@@ -22,7 +22,7 @@ POINT g_lastMousePos;
 bool g_mouseDown = false;
 
 float tx = 160.0f;
-float ty = 200.0f;
+float ty = 120.0f;
 
 
 struct Triangle {
@@ -288,7 +288,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		break;
 
 	case WM_MOUSEWHEEL:
-		g_zoom += GET_WHEEL_DELTA_WPARAM(wParam) / 120.0f;  // 120 is one notch
+		g_zoom += GET_WHEEL_DELTA_WPARAM(wParam) / 420.0f;  // 120 is one notch
 		if (g_zoom < 0.1f) g_zoom = 0.1f;
 		InvalidateRect(hwnd, NULL, TRUE);
 		break;
