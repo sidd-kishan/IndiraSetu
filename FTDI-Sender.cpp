@@ -579,7 +579,7 @@ int main()
 		while (1)
 		{
 			int tx_len = 1024;
-			msg_index = (msg_index + rand()) % total_input;
+			msg_index = (msg_index + (rand() % total_input)) % total_input;
 			lable++;
 			// Define prefix, suffix, and pattern from strings
 			const char* prefix_str = "0xFF,0X00,0XFF,0x00,0x00,0xFF,0x00,0XFF";
