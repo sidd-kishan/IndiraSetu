@@ -21,8 +21,8 @@ float g_zoom = 1.0f;
 POINT g_lastMousePos;
 bool g_mouseDown = false;
 
-float tx = 160.0f;
-float ty = 120.0f;
+float tx = 100.0f;
+float ty = 180.0f;
 
 
 struct Triangle {
@@ -244,9 +244,25 @@ void writeTrianglesToCSV(const std::string& filename, const std::vector<Triangle
 
 		if (triCounter % 2 == 0) {
 			// Add fake color (random or based on triangle index)
-			int color = rand() % 256;
+			std::vector<unsigned char> data = {
+			static_cast<unsigned char>(lineBuffer[0]),
+			static_cast<unsigned char>(lineBuffer[1]),
+			static_cast<unsigned char>(lineBuffer[2]),
+			static_cast<unsigned char>(lineBuffer[3]),
+			static_cast<unsigned char>(lineBuffer[4]),
+			static_cast<unsigned char>(lineBuffer[5])
+			};
+			int color = crc8(data.data(), static_cast<int>(data.size())) % 256;
 			lineBuffer.push_back(color);
-			color = rand() % 256;
+			data = {
+			static_cast<unsigned char>(lineBuffer[6]),
+			static_cast<unsigned char>(lineBuffer[7]),
+			static_cast<unsigned char>(lineBuffer[8]),
+			static_cast<unsigned char>(lineBuffer[9]),
+			static_cast<unsigned char>(lineBuffer[10]),
+			static_cast<unsigned char>(lineBuffer[11])
+			};
+			color = crc8(data.data(), static_cast<int>(data.size())) % 256; 
 			lineBuffer.push_back(color);
 			// Write 2 triangles per line = 14 values
 			for (size_t i = 0; i < lineBuffer.size(); ++i) {
