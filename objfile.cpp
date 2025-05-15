@@ -31,9 +31,9 @@ struct Triangle {
 std::vector<Triangle> triangles;
 
 struct Vector3 {
-	int x, y, z;
+	float x, y, z;
 	Vector3() : x(0), y(0), z(0) {}
-	Vector3(int x, int y, int z) : x(x), y(y), z(z) {}
+	Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 	//int color_r, color_g, color_b;
 };
 static std::vector<Vector3> vertices;
@@ -183,7 +183,7 @@ void renderWireframe(HDC hdc, const std::vector<Vector3>& vertices, const std::v
 		//    << static_cast<int>(b.x) << "," << static_cast<int>(b.y) << ") -> ("
 		//    << static_cast<int>(c.x) << "," << static_cast<int>(c.y) << ")\n";
 
-		//if (!isVisibleFromOverhead(a, b, c)) continue; // Skip triangles facing away
+		if (!isVisibleFromOverhead(a, b, c)) continue; // Skip triangles facing away
 
 		// Transform to screen space for drawing
 		Vector3 ta = transformVertex(a, pan, tilt, zoom, tx, ty);
@@ -198,6 +198,20 @@ void renderWireframe(HDC hdc, const std::vector<Vector3>& vertices, const std::v
 	}
 
 	std::cout << edge_count << " trigs: " << triangle_count << "\n";
+}
+
+static unsigned char crc8(const unsigned char* data, int len) {
+	unsigned char crc = 0x00;
+	for (int i = 0; i < len; i++) {
+		crc ^= data[i];
+		for (int j = 0; j < 8; j++) {
+			if (crc & 0x80)
+				crc = (crc << 1) ^ 0x07;
+			else
+				crc <<= 1;
+		}
+	}
+	return crc;
 }
 
 void writeTrianglesToCSV(const std::string& filename, const std::vector<Triangle>& triangles,
@@ -226,13 +240,14 @@ void writeTrianglesToCSV(const std::string& filename, const std::vector<Triangle
 		lineBuffer.push_back(b.x); lineBuffer.push_back(b.y);
 		lineBuffer.push_back(c.x); lineBuffer.push_back(c.y);
 
-		// Add fake color (random or based on triangle index)
-		int color = rand() % 256;
-		lineBuffer.push_back(color);
-
 		++triCounter;
 
 		if (triCounter % 2 == 0) {
+			// Add fake color (random or based on triangle index)
+			int color = rand() % 256;
+			lineBuffer.push_back(color);
+			color = rand() % 256;
+			lineBuffer.push_back(color);
 			// Write 2 triangles per line = 14 values
 			for (size_t i = 0; i < lineBuffer.size(); ++i) {
 				file << std::setw(3) << std::setfill('0') << static_cast<int>(lineBuffer[i]);
@@ -246,6 +261,7 @@ void writeTrianglesToCSV(const std::string& filename, const std::vector<Triangle
 	file.close();
 	std::cout << "Triangles exported to: " << filename << std::endl;
 }
+
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	static std::vector<std::pair<int, int>> edges;
