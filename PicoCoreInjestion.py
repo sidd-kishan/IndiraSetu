@@ -113,12 +113,20 @@ def main():
                                 byte = bin_str[i:i+8]
                                 str_got += chr(int(byte, 2))
                                 crc_input.append(int(byte, 2))
-                            if hex(crc8(crc_input[:14])) == hex(crc_input[14]):
+                            if crc8(crc_input[:6]) == crc_input[12] and crc8(crc_input[6:12]) == crc_input[13]:
                                 hit+=1
                                 heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13]])                            
+                            elif crc8(crc_input[:6]) == crc_input[12]:
+                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],0,0,0,0,0,0,crc_input[12],crc_input[13]])
+                            elif crc8(crc_input[6:12]) == crc_input[13]:
+                                heapq.heappush(heap, [0,0,0,0,0,0,crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13]])
                             else:
                                 miss +=1
-                                #print("crc8 invalid:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
+                                #print("salvaged trig2")
+                                #msg+= str("salvage trig2: "+str(trig2%255)+" sum sum: "+str(crc_input[13]))
+                            #if msg !="":
+                            #    print(msg)
+                            #print("crc8 invalid:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
                     #if len(bin_str) >127 and pkt_mark_s > -1 and pkt_mark_s < 10:
                     #    bin_str = bin_str[pkt_mark_s+8:]
                     #    str_got = ""
