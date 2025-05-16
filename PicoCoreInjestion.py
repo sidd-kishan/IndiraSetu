@@ -10,6 +10,7 @@ import gc
 import os
 import math
 import heapq
+import uarray as array
 
 heap = []
 
@@ -115,11 +116,11 @@ def main():
                                 crc_input.append(int(byte, 2))
                             if crc8(crc_input[:6]) == crc_input[12] and crc8(crc_input[6:12]) == crc_input[13]:
                                 hit+=1
-                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13]])                            
+                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13],crc_input[14]])                            
                             elif crc8(crc_input[:6]) == crc_input[12]:
-                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],0,0,0,0,0,0,crc_input[12],crc_input[13]])
+                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],0,0,0,0,0,0,crc_input[12],crc_input[13],crc_input[14]])
                             elif crc8(crc_input[6:12]) == crc_input[13]:
-                                heapq.heappush(heap, [0,0,0,0,0,0,crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13]])
+                                heapq.heappush(heap, [0,0,0,0,0,0,crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13],crc_input[14]])
                             else:
                                 miss +=1
                                 #print("salvaged trig2")
@@ -203,13 +204,25 @@ class Box(object):
             size = self.size
             #self.display.fill_rect(x, y, size, size, self.color)
             return
-        print("verified:"+ str(top[0])+" "+ str(top[1])+" "+ str(top[2])+" " + str(top[3])+" "+ str(top[4])+" "+ str(top[5])+" " + str(top[6])+" "+ str(top[7])+" "+ str(top[8])+" " + str(top[9])+" "+ str(top[10])+" "+ str(top[11])+" " + str(top[12])+" "+ str(top[13]))
-        self.display.line(top[0], top[1], top[2], top[3], top[12]*top[13])
-        self.display.line(top[2], top[3], top[4], top[5], top[12]*top[13])
-        self.display.line(top[4], top[5], top[0], top[1], top[12]*top[13])
-        self.display.line(top[6], top[7], top[8], top[9], top[12]*top[13])
-        self.display.line(top[8], top[9], top[10], top[11], top[12]*top[13])
-        self.display.line(top[10], top[11], top[6], top[7], top[12]*top[13])
+        #print("last byte:"+ str(top[14]))
+        l1 = math.sqrt(pow(top[0]-top[2],2)+pow(top[1]-top[3],2))
+        l2 = math.sqrt(pow(top[2]-top[4],2)+pow(top[3]-top[5],2))
+        l3 = math.sqrt(pow(top[4]-top[0],2)+pow(top[5]-top[1],2))
+        l4 = math.sqrt(pow(top[6]-top[8],2)+pow(top[7]-top[9],2))
+        l5 = math.sqrt(pow(top[8]-top[10],2)+pow(top[9]-top[11],2))
+        l6 = math.sqrt(pow(top[10]-top[6],2)+pow(top[11]-top[7],2))
+        limit = 51
+        if l1 < limit and l2 < limit and l3 < limit and l4 < limit and l5 < limit and l6 < limit :
+            self.display.poly(0,0,array.array('h',[top[0], top[1], top[2], top[3], top[4], top[5]]),top[12]*top[13],True)
+            self.display.poly(0,0,array.array('h',[top[6], top[7], top[8], top[9],top[10], top[11]]),top[12]*top[13],True)
+        else:
+            print("l1 Length:"+ str(l1))
+            print("l2 Length:"+ str(l2))
+            print("l3 Length:"+ str(l3))
+            print("l4 Length:"+ str(l4))
+            print("l5 Length:"+ str(l5))
+            print("l6 Length:"+ str(l6))
+            
 
 
 """
@@ -274,7 +287,7 @@ def test():
             frame_count += 1
             if frame_count == 100:
                 frame_rate = 100 / ((ticks_us() - start_time) / 1000000)
-                print(frame_rate)
+                #print(frame_rate)
                 start_time = ticks_us()
                 frame_count = 0
 
