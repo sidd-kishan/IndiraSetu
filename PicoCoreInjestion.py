@@ -30,12 +30,9 @@ pin7.value(1)
 
 pin8=Pin(8,Pin.IN,Pin.PULL_UP)  # 1 bit -> AD0
 
-recv_start = 0
-
 hit = 0
 miss = 0
 pkt_tot_len = 0
-good_pkt_tot_len =0
 
 
 
@@ -86,56 +83,59 @@ def crc8(data):
 
 # Now, when Pin(16) or Pin(17) is pulled low a message will be printed to the REPL.
 def main():
-    global recv_start
     global hit
     global miss
-    global good_pkt_tot_len
     global pkt_tot_len
     recv_start = 1
     qsz = 0
     while True:
         bin_str = ""
-        while pin3.value() == 0:
-            sm1.active(1)
-            #time.sleep(0.0000001)
-            while sm1.rx_fifo():#qsz < 8:
-                sm_got = bin(sm1.get())[2:]
-                if len(sm_got) > 2:
-                    bin_str = bin_str + sm_got
-                    #pkt_mark_s = bin_str.find("01011010")
-                    if len(bin_str) >255:
-                        #print(bin_str[:128])
-                        pkt_mark = bin_str.find("10100101")
-                        if pkt_mark > -1 and pkt_mark < 10:
-                            bin_str = bin_str[pkt_mark+8:]
-                            str_got = ""
-                            crc_input = bytearray()
-                            for i in range(0, len(bin_str[:256]), 8):
-                                byte = bin_str[i:i+8]
-                                str_got += chr(int(byte, 2))
-                                crc_input.append(int(byte, 2))
-                            if crc8(crc_input[:6]) == crc_input[12] and crc8(crc_input[6:12]) == crc_input[13]:
-                                hit+=1
-                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13],crc_input[14]])                            
-                            elif crc8(crc_input[:6]) == crc_input[12]:
-                                heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],0,0,0,0,0,0,crc_input[12],crc_input[13],crc_input[14]])
-                            elif crc8(crc_input[6:12]) == crc_input[13]:
-                                heapq.heappush(heap, [0,0,0,0,0,0,crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13],crc_input[14]])
-                            else:
-                                miss +=1
-                                #print("salvaged trig2")
-                                #msg+= str("salvage trig2: "+str(trig2%255)+" sum sum: "+str(crc_input[13]))
-                            #if msg !="":
-                            #    print(msg)
-                            #print("crc8 invalid:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
-                    #if len(bin_str) >127 and pkt_mark_s > -1 and pkt_mark_s < 10:
-                    #    bin_str = bin_str[pkt_mark_s+8:]
-                    #    str_got = ""
-                    #    for i in range(0, len(bin_str[:128]), 8):
-                    #        byte = bin_str[i:i+8]
-                    #        str_got += chr(int(byte, 2))
-                    #    print("s: "+str_got)
-            sm1.active(0)
+        #while pin3.value() == 0:
+        sm1.active(1)
+        #time.sleep(0.0000001)
+        while sm1.rx_fifo():#qsz < 8:
+            sm_got = bin(sm1.get())[2:]
+            if len(sm_got) > 2:
+                bin_str = bin_str + sm_got
+                #pkt_mark_s = bin_str.find("01011010")
+                if len(bin_str) >255:
+                    #print(bin_str[:128])
+                    pkt_mark = bin_str.find("10100101")
+                    if pkt_mark > -1 and pkt_mark < 10:
+                        bin_str = bin_str[pkt_mark+8:]
+                        str_got = ""
+                        crc_input = bytearray()
+                        for i in range(0, len(bin_str[:256]), 8):
+                            byte = bin_str[i:i+8]
+                            str_got += chr(int(byte, 2))
+                            crc_input.append(int(byte, 2))
+                        if crc8(crc_input[:6]) == crc_input[12] and crc8(crc_input[6:12]) == crc_input[13]:
+                            hit+=1
+                            heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13],crc_input[14]])                            
+                        elif crc8(crc_input[:6]) == crc_input[12]:
+                            hit+=1
+                            heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],0,0,0,0,0,0,crc_input[12],crc_input[13],crc_input[14]])
+                        elif crc8(crc_input[6:12]) == crc_input[13]:
+                            hit+=1
+                            heapq.heappush(heap, [0,0,0,0,0,0,crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13],crc_input[14]])
+                        #elif crc8(crc_input[:12]) == crc_input[14]:
+                        #    hit+=1
+                        #    heapq.heappush(heap, [crc_input[0],crc_input[1],crc_input[2],crc_input[3],crc_input[4],crc_input[5],crc_input[6],crc_input[7],crc_input[8],crc_input[9],crc_input[10],crc_input[11],crc_input[12],crc_input[13],crc_input[14]])
+                        else:
+                            miss +=1
+                            #print("salvaged trig2")
+                            #msg+= str("salvage trig2: "+str(trig2%255)+" sum sum: "+str(crc_input[13]))
+                        #if msg !="":
+                        #    print(msg)
+                        #print("crc8 invalid:"+ str(crc_input[0])+" "+ str(crc_input[1])+" "+ str(crc_input[2])+" " + str(crc_input[3])+" "+ str(crc_input[4])+" "+ str(crc_input[5])+" " + str(crc_input[6])+" "+ str(crc_input[7])+" "+ str(crc_input[8])+" " + str(crc_input[9])+" "+ str(crc_input[10])+" "+ str(crc_input[11])+" " + str(crc_input[12])+" "+ str(crc_input[13]))
+                #if len(bin_str) >127 and pkt_mark_s > -1 and pkt_mark_s < 10:
+                #    bin_str = bin_str[pkt_mark_s+8:]
+                #    str_got = ""
+                #    for i in range(0, len(bin_str[:128]), 8):
+                #        byte = bin_str[i:i+8]
+                #        str_got += chr(int(byte, 2))
+                #    print("s: "+str_got)
+        sm1.active(0)
         
 
 class Box(object):
@@ -241,12 +241,12 @@ def free(full=False):
 
 
 # set landscape screen
-screen_width = 320
+screen_width = 319
 screen_height = 240
 screen_rotation = 90
 
 # FrameBuffer needs 2 bytes for every RGB565 pixel
-buffer_width = 320
+buffer_width = 255
 buffer_height = 240
 buffer = bytearray(buffer_width * buffer_height * 2)
 fbuf = framebuf.FrameBuffer(buffer, buffer_width, buffer_height, framebuf.RGB565)
@@ -262,8 +262,8 @@ def test():
 
         display.clear()
 
-        boxes = [Box(1,1, randint(7, 40), fbuf,
-                     color565(randint(30, 256), randint(30, 256), randint(30, 256))) for i in range(5)]
+        boxes = [Box(0,0, 0, fbuf,
+                     color565(0, 0, 0)) for i in range(1)]
 
         print(free())
 
