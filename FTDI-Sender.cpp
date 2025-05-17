@@ -418,8 +418,9 @@ int main()
 	unsigned long bytesRead = 0;
 
 
-	status = FT_SetTimeouts(myDevice.ftHandle, 500, 500);
-
+	status = FT_SetTimeouts(myDevice.ftHandle, 0, 0);
+	status = FT_SetFlowControl(myDevice.ftHandle, FT_FLOW_RTS_CTS, 0, 0);
+	status = FT_SetUSBParameters(myDevice.ftHandle, 0x10000, 0x10000);
 	if (status != FT_OK) {
 		ft_error(status, "FT_SetTimeouts", myDevice.ftHandle);
 	}
